@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
- *
- * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
- *
- * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
+ * Copyright (C) 2011-2012 ArkCORE <http://www.arkania.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,12 +17,10 @@
  */
 
  /*
- Made By: Jenova
- Project: Atlantiss Core
- SDName: boss_ammunae
- SD%Complete: 75%
- SDComment:
- SDCategory: Halls Of Origination
+ SFName: boss_ammunae
+ SF%Complete: 75%
+ SFComment:
+ SFCategory: Halls Of Origination
 
  Known Bugs:
 
@@ -145,7 +140,7 @@ class boss_ammunae : public CreatureScript
 
                 std::list<Creature*>::iterator itr = pCreatureList.begin();
                 uint32 count = pCreatureList.size();
-                for(std::list<Creature*>::iterator iter = pCreatureList.begin(); iter != pCreatureList.end(); ++iter)
+                for (std::list<Creature*>::iterator iter = pCreatureList.begin(); iter != pCreatureList.end(); ++iter)
                 {
                     (*iter)->SummonCreature(NPC_BLOODPETAL_BLOSSOM, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
                     (*iter)->ForcedDespawn();
@@ -170,7 +165,7 @@ class boss_ammunae : public CreatureScript
 
                 while(uint32 eventId = events.ExecuteEvent())
                 {
-                    switch(eventId)
+                    switch (eventId)
                     {
                         case EVENT_WITHER:
                             if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, true))
@@ -231,11 +226,11 @@ public:
     {
         mob_bloodpetal_blossomAI(Creature* creature) : ScriptedAI(creature)
         {
-            m_pInstance = (InstanceScript*)creature->GetInstanceScript();
+            instance = (InstanceScript*)creature->GetInstanceScript();
             Reset();
         }
 
-        InstanceScript* m_pInstance;
+        InstanceScript* instance;
         uint32 SlashTimer;
 
         void Reset()
@@ -255,7 +250,8 @@ public:
             {
                 DoCast(me->getVictim(), SPELL_THORN_SLASH);
                 SlashTimer = 7500;
-            } else SlashTimer -= diff;
+            }
+            else SlashTimer -= diff;
         }
 
         void JustDied(Unit* /*killer*/)
@@ -280,11 +276,11 @@ public:
     {
         mob_seed_podAI(Creature* creature) : Scripted_NoMovementAI(creature), Summons(me)
         {
-            m_pInstance = (InstanceScript*)creature->GetInstanceScript();
+            instance = (InstanceScript*)creature->GetInstanceScript();
             Reset();
         }
 
-        InstanceScript* m_pInstance;
+        InstanceScript* instance;
 
         SummonList Summons;
         uint32 EnergizeTimer;
@@ -303,7 +299,7 @@ public:
         {
             if (IsHeroic())
             {
-                if (Unit *target = me->FindNearestCreature(BOSS_AMMUNAE, 100))
+                if (Unit* target = me->FindNearestCreature(BOSS_AMMUNAE, 100))
                 {
                     DoCast(SPELL_ENERGIZE);
                     DoCast(target, SPELL_ENERGIZE);
@@ -313,7 +309,7 @@ public:
             }
             else
             {
-                if (Unit *target = me->FindNearestCreature(BOSS_AMMUNAE, 100))
+                if (Unit* target = me->FindNearestCreature(BOSS_AMMUNAE, 100))
                 {
                     DoCast(SPELL_ENERGIZE);
                     DoCast(target, SPELL_ENERGIZE);
@@ -352,11 +348,11 @@ public:
     {
         mob_sporeAI(Creature* creature) : Scripted_NoMovementAI(creature), Summons(me)
         {
-            m_pInstance = (InstanceScript*)creature->GetInstanceScript();
+            instance = (InstanceScript*)creature->GetInstanceScript();
             Reset();
         }
 
-        InstanceScript* m_pInstance;
+        InstanceScript* instance;
 
         SummonList Summons;
         uint32 SporeTimer;
@@ -377,7 +373,8 @@ public:
             {
                 DoCast(SPELL_SPORE_CLOUD);
                 //SporeTimer = 3000;
-            } else SporeTimer -= diff;
+            }
+            else SporeTimer -= diff;
         }
 
         void JustDied(Unit* /*killer*/)

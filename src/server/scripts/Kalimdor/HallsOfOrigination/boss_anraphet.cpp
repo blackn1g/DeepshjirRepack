@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
- *
- * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
- *
- * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
+ * Copyright (C) 2011-2012 ArkCORE <http://www.arkania.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,12 +17,10 @@
  */
 
  /*
- Made By: Jenova
- Project: Atlantiss Core
- SDName: boss_anraphet
- SD%Complete: 80%
- SDComment:
- SDCategory: Halls Of Origination
+ SFName: boss_anraphet
+ SF%Complete: 80%
+ SFComment:
+ SFCategory: Halls Of Origination
 
  Known Bugs:
 
@@ -174,7 +169,7 @@ class boss_anraphet : public CreatureScript
 
                 while(uint32 eventId = events.ExecuteEvent())
                 {
-                    switch(eventId)
+                    switch (eventId)
                     {
                         case EVENT_ALPHA_BEAMS:
                             if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, true))
@@ -256,24 +251,26 @@ class boss_flame_warden : public CreatureScript
 
                 if (LavaTimer <= diff)
                 {
-                    if(Unit *pTarget = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
-                        DoCast(pTarget, SPELL_LAVA_ERUPTION);
+                    if(Unit *target = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
+                        DoCast(target, SPELL_LAVA_ERUPTION);
                     LavaTimer = 5000+rand()%5000;
-                } else LavaTimer -= diff;
+                }
+                else LavaTimer -= diff;
 
                 if (InfernoTimer <= diff)
                 {
                     DoCast(SPELL_RAGING_INFERNO);
                     InfernoTimer = 20000+rand()%7500;
-                } else InfernoTimer -= diff;
+                }
+                else InfernoTimer -= diff;
 
                 DoMeleeAttackIfReady();
             }
 
             void JustDied(Unit* /*who*/)
             {
-                if (Creature *pAnraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
-                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, pAnraphet->AI()))
+                if (Creature *anraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
+                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, anraphet->AI()))
                                 pAI->WardenKilled();
 
                 if (instance)
@@ -324,8 +321,8 @@ class boss_air_warden : public CreatureScript
 
                 if (WindTimer <= diff)
                 {
-                    if(Unit *pTarget = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
-                        DoCast(pTarget, SPELL_WIND_SHEAR);
+                    if(Unit *target = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
+                        DoCast(target, SPELL_WIND_SHEAR);
                     WindTimer = 7500+rand()%7500;
                 } else WindTimer -= diff;
 
@@ -334,8 +331,8 @@ class boss_air_warden : public CreatureScript
 
             void JustDied(Unit* /*who*/)
             {
-                if (Creature *pAnraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
-                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, pAnraphet->AI()))
+                if (Creature *anraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
+                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, anraphet->AI()))
                                 pAI->WardenKilled();
                 if (instance)
                     instance->SetData(DATA_AIR_WARDEN, DONE);
@@ -387,24 +384,26 @@ class boss_earth_warden : public CreatureScript
 
                 if (RockTimer <= diff)
                 {
-                    if(Unit *pTarget = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
-                        DoCast(pTarget, SPELL_WIND_SHEAR);
+                    if(Unit* target = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
+                        DoCast(target, SPELL_WIND_SHEAR);
                     RockTimer = 20000+rand()%7500;
-                } else RockTimer -= diff;
+                }
+                else RockTimer -= diff;
 
                 if (ImpaleTimer <= diff)
                 {
                     DoCast(me->getVictim(), SPELL_WIND_SHEAR);
                     ImpaleTimer = 7500+rand()%7500;
-                } else ImpaleTimer -= diff;
+                }
+                else ImpaleTimer -= diff;
 
                 DoMeleeAttackIfReady();
             }
 
             void JustDied(Unit* /*who*/)
             {
-                if (Creature *pAnraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
-                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, pAnraphet->AI()))
+                if (Creature* anraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
+                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, anraphet->AI()))
                                 pAI->WardenKilled();
 
                 if (instance)
@@ -455,18 +454,19 @@ class boss_water_warden : public CreatureScript
 
                 if (BubbleTimer <= diff)
                 {
-                    if(Unit *pTarget = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
-                        DoCast(pTarget, SPELL_BUBBLE_BOUND);
+                    if(Unit *target = (SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true)))
+                        DoCast(target, SPELL_BUBBLE_BOUND);
                     BubbleTimer = 15000+rand()%7500;
-                } else BubbleTimer -= diff;
+                }
+                else BubbleTimer -= diff;
 
                 DoMeleeAttackIfReady();
             }
 
             void JustDied(Unit* /*who*/)
             {
-                if (Creature *pAnraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
-                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, pAnraphet->AI()))
+                if (Creature *anraphet = me->FindNearestCreature(BOSS_ANRAPHET, 1000, true))
+                      if (boss_anraphet::boss_anraphetAI* pAI = CAST_AI(boss_anraphet::boss_anraphetAI, anraphet->AI()))
                                 pAI->WardenKilled();
 
                 if (instance)

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
- *
- * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
- *
- * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
+ * Copyright (C) 2011-2012 ArkCORE <http://www.arkania.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,13 +17,10 @@
  */
 
  /*
- Made By: Jenova
- Project: Atlantiss Core
-
- Known Bugs:
-
- TODO:
- 1. Needs Testing
+ SFName: boss_isiset
+ SF%Complete: 0%
+ SFComment: Needs Testing
+ SFCategory: Halls Of Origination
  */
 
 #include "ScriptPCH.h"
@@ -88,10 +82,10 @@ class boss_ptah : public CreatureScript
         {
             boss_ptahAI(Creature* creature) : ScriptedAI(creature), Summons(me)
             {
-                pInstance = creature->GetInstanceScript();
+                instance = creature->GetInstanceScript();
             }
 
-            InstanceScript* pInstance;
+            InstanceScript* instance;
             EventMap events;
             SummonList Summons;
 
@@ -106,15 +100,15 @@ class boss_ptah : public CreatureScript
                 me->MonsterYell(SAY_DIED, 0, 0);
             }
 
-            void JustSummoned(Creature *pSummoned)
+            void JustSummoned(Creature *summoned)
             {
-                pSummoned->SetInCombatWithZone();
-                if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM,0))
-                    pSummoned->AI()->AttackStart(pTarget);
-                Summons.Summon(pSummoned);
+                summoned->SetInCombatWithZone();
+                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM,0))
+                    summoned->AI()->AttackStart(target);
+                Summons.Summon(summoned);
             }
 
-            void SummonedCreatureDespawn(Creature *summon)
+            void SummonedCreatureDespawn(Creature* summon)
             {
                 Summons.Despawn(summon);
             }
@@ -138,7 +132,7 @@ class boss_ptah : public CreatureScript
 
                 while (uint32 eventId = events.ExecuteEvent())
                 {
-                    switch(eventId)
+                    switch (eventId)
                     {
                     case EVENT_FLAME_BOLT:
                         if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, true))
@@ -180,7 +174,7 @@ class boss_ptah : public CreatureScript
 
     CreatureAI* GetAI(Creature* creature) const
     {
-                return new boss_ptahAI(creature);
+        return new boss_ptahAI(creature);
     }
 };
 

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
- *
- * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
- *
- * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
+ * Copyright (C) 2011-2012 ArkCORE <http://www.arkania.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,12 +17,11 @@
  */
 
  /*
- Made By: Jenova
- Project: Atlantiss Core
- SDName: boss_isiset
- SD%Complete: 90%
- SDComment:
- SDCategory: Halls Of Origination
+
+ SFName: boss_isiset
+ SF%Complete: 90%
+ SFComment:
+ SFCategory: Halls Of Origination
 
  Known Bugs:
 
@@ -55,12 +51,12 @@ class OrientationCheck : public std::unary_function<Unit*, bool>
 
 enum Texts
 {
-    SAY_AGGRO = 0,
-    SAY_SUPERNOVA = 1,
-    SAY_KILL_1 = 2,
-    SAY_KILL_2 = 3,
-    SAY_DEATH_1 = 4,
-    SAY_DEATH_2 = 5,
+    SAY_AGGRO         = 0,
+    SAY_SUPERNOVA     = 1,
+    SAY_KILL_1        = 2,
+    SAY_KILL_2        = 3,
+    SAY_DEATH_1       = 4,
+    SAY_DEATH_2       = 5,
 };
 
 enum Spells
@@ -89,13 +85,13 @@ class boss_isiset : public CreatureScript
         {
             boss_isisetAI(Creature* creature) : ScriptedAI(creature)
             {
-                pInstance = creature->GetInstanceScript();
+                instance = creature->GetInstanceScript();
                 SetCombatMovement(true);
             }
 
             std::list<uint64> SummonList;
 
-            InstanceScript *pInstance;
+            InstanceScript* instance;
 
             uint32 SupernovaTimer;
             uint32 AstralRainTimer;
@@ -145,7 +141,7 @@ class boss_isiset : public CreatureScript
 
             void SummonedCreatureDespawn(Creature* summon)
             {
-                switch(summon->GetEntry())
+                switch (summon->GetEntry())
                 {
                     case 39720: // Astral Rain
                         AstralRain = false;
@@ -167,16 +163,16 @@ class boss_isiset : public CreatureScript
 
                 for (std::list<uint64>::const_iterator itr = SummonList.begin(); itr != SummonList.end(); ++itr)
                 {
-                    if (Creature* pTemp = Unit::GetCreature(*me, *itr))
-                        if (pTemp)
-                            pTemp->DisappearAndDie();
+                    if (Creature* temp = Unit::GetCreature(*me, *itr))
+                        if (temp)
+                            temp->DisappearAndDie();
                 }
                 SummonList.clear();
             }
 
-            void JustSummoned(Creature* pSummon)
+            void JustSummoned(Creature* summon)
             {
-                SummonList.push_back(pSummon->GetGUID());
+                SummonList.push_back(summon->GetGUID());
             }
 
             void UpdateAI(const uint32 diff)
@@ -215,13 +211,15 @@ class boss_isiset : public CreatureScript
                     {
                         DoCast(me, SPELL_CELESTIAL_CALL_P1);
                         CelestialCallPhase1Timer = 45000;
-                    } else CelestialCallPhase1Timer -= diff;
+                    }
+                    else CelestialCallPhase1Timer -= diff;
 
                     if (VeilOfSkyPhase1Timer <= diff && Phased == false && VeilOfSky == true)
                     {
                         DoCast(me, SPELL_VEIL_OF_SKY_P1);
                         VeilOfSkyPhase1Timer = 45000;
-                    } else VeilOfSkyPhase1Timer -= diff;
+                    }
+                    else VeilOfSkyPhase1Timer -= diff;
                 }
 
                 if (Phase == 1)
@@ -230,13 +228,15 @@ class boss_isiset : public CreatureScript
                     {
                         DoCast(me, SPELL_CELESTIAL_CALL_P2);
                         CelestialCallPhase2Timer = 45000;
-                    } else CelestialCallPhase2Timer -= diff;
+                    }
+                    else CelestialCallPhase2Timer -= diff;
 
                     if (VeilOfSkyPhase2Timer <= diff && Phased == false && VeilOfSky == true)
                     {
                         DoCast(me, SPELL_VEIL_OF_SKY_P2);
                         VeilOfSkyPhase2Timer = 45000;
-                    } else VeilOfSkyPhase2Timer -= diff;
+                    }
+                    else VeilOfSkyPhase2Timer -= diff;
                 }
 
                 if (Phase == 2)
@@ -245,13 +245,15 @@ class boss_isiset : public CreatureScript
                     {
                         DoCast(me, SPELL_CELESTIAL_CALL_P3);
                         CelestialCallPhase3Timer = 45000;
-                    } else CelestialCallPhase3Timer -= diff;
+                    }
+                    else CelestialCallPhase3Timer -= diff;
 
                     if (VeilOfSkyPhase3Timer <= diff && Phased == false && VeilOfSky == true)
                     {
                         DoCast(me, SPELL_VEIL_OF_SKY_P3);
                         VeilOfSkyPhase3Timer = 45000;
-                    } else VeilOfSkyPhase3Timer -= diff;
+                    }
+                    else VeilOfSkyPhase3Timer -= diff;
                 }
 
                 if (SupernovaTimer <= diff && Phased == false)
@@ -259,13 +261,15 @@ class boss_isiset : public CreatureScript
                     //Talk(SAY_SUPERNOVA);
                     DoCast(me->getVictim(), SPELL_SUPERNOVA);
                     SupernovaTimer = 15000+rand()%5000;
-                } else SupernovaTimer -= diff;
+                }
+                else SupernovaTimer -= diff;
 
                 if (AstralRainTimer <= diff && Phased == false && CelestialCall == true)
                 {
                     DoCast(SelectTarget(SELECT_TARGET_RANDOM, 0, 0, true), SPELL_ASTRAL_RAIN);
                     AstralRainTimer = 10000;
-                } else AstralRainTimer -= diff;
+                }
+                else AstralRainTimer -= diff;
 
                 DoMeleeAttackIfReady();
             }
