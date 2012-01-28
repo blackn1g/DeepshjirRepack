@@ -162,20 +162,20 @@ extern int main(int argc, char **argv) {
 		}
 		sLog->Initialize();
 
-		sLog->outString("%s (realm-daemon)", _CLIENT_BUILD_REVISION);
-		sLog->outString(" ");
-		sLog->outString(" A World of Warcraft: Cataclysm Core Emulator	");
-		sLog->outString("       _/_/              _/          _/_/_/    _/_/    _/_/_/    _/_/_/_/  ");
-		sLog->outString("    _/    _/  _/  _/_/  _/  _/    _/        _/    _/  _/    _/  _/         ");
-		sLog->outString("   _/_/_/_/  _/_/      _/_/      _/        _/    _/  _/_/_/    _/_/_/      ");
-		sLog->outString("  _/    _/  _/        _/  _/    _/        _/    _/  _/    _/  _/           ");
-		sLog->outString(" _/    _/  _/        _/    _/    _/_/_/    _/_/    _/    _/  _/_/_/_/  	");
-		sLog->outString(" Arkania Community (c) 2012");
-		sLog->outString("      <http://arkania.net/>");
-		sLog->outString(" ");
-		sLog->outString("<Ctrl-C> to stop.\n");
-
-		sLog->outDetail("%s (Library: %s)", OPENSSL_VERSION_TEXT, SSLeay_version(SSLEAY_VERSION));
+			sLog->outString(" ");
+			sLog->outString("  Authserver");
+			sLog->outString(" ");
+			sLog->outString("  A World of Warcraft: Cataclysm Core Emulator	");
+			sLog->outString("  ");
+			sLog->outString("  Deepshjir Cataclysm Repack ",_FULLVERSION);
+			sLog->outString("  by Naios (2012) ");
+			sLog->outString("  Supports Game version: 4.06a - 13623");
+			sLog->outString("  ");
+			sLog->outString("  based on:");
+			sLog->outString("  ArkCore - by Arkania Community (c) 2012");
+			sLog->outString("       <http://arkania.net/>");
+			sLog->outString(" ");
+			sLog->outString("  <Ctrl-C> to stop.\n");
 
 #if defined (ACE_HAS_EVENT_POLL) || defined (ACE_HAS_DEV_POLL)
 			ACE_Reactor::instance(new ACE_Reactor(new ACE_Dev_Poll_Reactor(ACE::max_handles(), 1), 1), true);
