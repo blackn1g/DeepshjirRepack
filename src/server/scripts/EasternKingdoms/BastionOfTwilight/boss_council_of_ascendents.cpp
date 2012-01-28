@@ -22,6 +22,23 @@
 #include "ScriptPCH.h"
 #include "bastion_of_twilight.h"
 
+enum Spells
+{
+	SPELL_HYDROLANCE = 82752,
+	SPELL_WATERBOMB = 82699,
+	SPELL_HEART_OF_ICE = 82655,
+	SPELL_GLACIATE = 92508,
+    SPELL_BURNING_BLOOD = 82660,
+    SPELL_FLAME_TORRENT = 82777,
+    SPELL_AEGIS_OF_FLAMES = 92512,
+};
+
+enum Actions
+{
+    ACTION_IGNACIOUS_JUMPS,
+    ACTION_INGACIOUS_CHARGE,
+};
+
 class boss_feludius : public CreatureScript
 {
     public:
