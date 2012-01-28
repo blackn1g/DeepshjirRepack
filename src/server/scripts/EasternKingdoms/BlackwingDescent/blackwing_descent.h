@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
  *
- * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ * Copyright (C) 2011 ArkCORE <http://www.arkania.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -62,6 +62,15 @@ enum Creatures
     NPC_NEFARIAN = 41376,
     NPC_ONYXIA = 41270,
     NPC_LORD_VICTOR_NEFARIAN = 41379,
+
+	NPC_NEFARIAN_HELPER_HEROIC = 49427,
+
+	// Magmaw
+	NPC_MAGMAWS_HEAD = 42347,
+	NPC_IGNITION_TRIGGER = 49447,
+	NPC_LAVA_PARASITE = 41806,
+	NPC_PILLAR_OF_FLAME_TRIGGER = 41843,
+	NPC_BLAZING_BONE_CONSTRUCT = 49416,
 };
 
 #endif
