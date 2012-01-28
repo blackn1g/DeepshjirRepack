@@ -606,6 +606,7 @@ void AddSC_kezan();
 //void AddSC_tol_barad();
 
 void AddSC_the_stonecore();					 //TheStonecore
+void AddSC_boss_corborus();
 void AddSC_instance_the_stonecore();
 void AddSC_instance_halls_of_origination();  //Halls of Origination
 void AddSC_boss_temple_guardian_anhuur();
@@ -623,10 +624,9 @@ void AddSC_instance_lost_city_of_the_tolvir();
 void AddSC_boss_lockmaw();
 void AddSC_boss_high_prophet_barim();
 void AddSC_boss_altairus();                  //Vortex Pinnacle
-void AddSC_boss_asaad();
-void AddSC_boss_grand_vizier_ertan();
-void AddSC_vortex_pinnacle();
-void AddSC_instance_vortex_pinnacle();
+void AddSC_boss_assad();
+void AddSC_boss_grand_vizir_ertan();
+void AddSC_instance_the_vortex_pinnacle();
 void AddSC_instance_throne_of_the_four_winds(); // Throne of the Four Winds
 void AddSC_throne_of_the_four_winds();
 void AddSC_boss_general_umbriss();           //Grimbatol
@@ -635,6 +635,10 @@ void AddSC_boss_drahga_shadowburner();
 void AddSC_boss_erudax();
 void AddSC_instance_grim_batol();
 void AddSC_instance_throne_of_the_tides();	//Throne of the Tides
+void AddSC_boss_lady_nazjar();
+void AddSC_boss_erunak_stonespeaker();
+void AddSC_boss_commander_ulthok();
+void AddSC_ozumat();
 void AddSC_instance_blackrock_caverns();	//Blackrock Caverns
 void AddSC_boss_romogg_bonecrusher();
 void AddSC_boss_corla_herald_of_twilight();
@@ -1286,6 +1290,7 @@ void AddNorthrendScripts() {
 
 	// Cataclysm Scripts
 	AddSC_the_stonecore();//The Stonecore
+	AddSC_boss_corborus();
 	AddSC_instance_the_stonecore();
     AddSC_instance_halls_of_origination();  //Halls of Origination
     AddSC_boss_temple_guardian_anhuur();
@@ -1302,10 +1307,9 @@ void AddNorthrendScripts() {
 	AddSC_boss_lockmaw();
 	AddSC_boss_high_prophet_barim();
     AddSC_boss_altairus();                  //Vortex Pinnacle
-    AddSC_boss_asaad();
-    AddSC_boss_grand_vizier_ertan();
-    AddSC_vortex_pinnacle();
-    AddSC_instance_vortex_pinnacle();
+    AddSC_boss_assad();
+	AddSC_boss_grand_vizir_ertan();
+    AddSC_instance_the_vortex_pinnacle();
 	AddSC_instance_throne_of_the_four_winds(); // Throne of the Four Winds
 	AddSC_throne_of_the_four_winds();
     AddSC_boss_general_umbriss();           //Grimbatol
@@ -1313,7 +1317,11 @@ void AddNorthrendScripts() {
     AddSC_boss_drahga_shadowburner();
     AddSC_boss_erudax();
     AddSC_instance_grim_batol();
-	AddSC_instance_throne_of_the_tides();//Throne of the Tides
+	AddSC_instance_throne_of_the_tides(); //Throne of the Tides
+	AddSC_boss_lady_nazjar();
+	AddSC_boss_erunak_stonespeaker();
+	AddSC_boss_commander_ulthok();
+	AddSC_ozumat();
 	AddSC_instance_blackrock_caverns(); //Blackrock Caverns
 	AddSC_boss_romogg_bonecrusher();
 	AddSC_boss_corla_herald_of_twilight();
