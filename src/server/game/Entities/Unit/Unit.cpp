@@ -7151,8 +7151,34 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage,
 			}
 			break;
 		}
-		case SPELLFAMILY_HUNTER:
-		{
+        case SPELLFAMILY_HUNTER:
+        {
+            // Crouching Tiger, Hidden Chimera
+            if (dummySpell->SpellIconID == 4752)
+            {
+                if (!(dummySpell->procFlags == 0x000202A8)) return false;
+                if (ToPlayer()->HasSpellCooldown(dummySpell->Id)) return false;
+
+                if (procFlag & PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK ||
+                    procFlag & PROC_FLAG_TAKEN_SPELL_MELEE_DMG_CLASS)
+                {
+                    uint32 seconds = dummySpell->EffectBasePoints [0];
+                    ToPlayer()->ReduceSpellCooldown(781, seconds);
+                    ToPlayer()->AddSpellCooldown(dummySpell->Id, 0, time(NULL) + 2);
+                    return true;
+                }
+
+                if (procFlag & PROC_FLAG_TAKEN_RANGED_AUTO_ATTACK || 
+                    procFlag & PROC_FLAG_TAKEN_SPELL_RANGED_DMG_CLASS || 
+                    procFlag & PROC_FLAG_TAKEN_SPELL_MAGIC_DMG_CLASS_NEG)
+                {
+                    uint32 seconds = dummySpell->EffectBasePoints [1];
+                    ToPlayer()->ReduceSpellCooldown(19263, seconds);
+                    ToPlayer()->AddSpellCooldown(dummySpell->Id, 0, time(NULL) + 2);
+                    return true;
+                }
+                return false;
+            }
 			// Thrill of the Hunt
 			if (dummySpell->SpellIconID == 2236)
 			{
@@ -8248,6 +8274,39 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage,
 
 				return true;
 			}
+            // Tidal Waves
+            if (dummySpell->SpellIconID == 3057)
+            {
+                if (!procSpell) return false;
+
+                int32 bp0 = -(dummySpell->EffectBasePoints[0]);
+                int32 bp1 = dummySpell->EffectBasePoints[0];
+                CastCustomSpell(this, 53390, &bp0, &bp1, NULL, true, 0, 0, GetGUID());
+                return true;
+            }
+            // Telluric Currents
+            if (dummySpell->SpellIconID == 320)
+            {
+                if (!procSpell) return false;
+
+                int32 pct = SpellMgr::CalculateSpellEffectAmount(dummySpell, EFFECT_0);
+                int32 bp0 = damage * pct / 100;
+
+                CastCustomSpell(pVictim, 82987, &bp0, NULL, NULL, true, 0, 0, GetGUID());
+                return true;
+            }
+            // Focused Insight
+            if (dummySpell->SpellIconID == 4674)
+            {
+                if (!procSpell) return false;
+
+                int32 manacost = (procSpell->ManaCostPercentage * GetCreateMana() / 100);
+                int32 mana = -(manacost * SpellMgr::CalculateSpellEffectAmount(dummySpell, EFFECT_0)) / 100;
+                int32 effect = SpellMgr::CalculateSpellEffectAmount(dummySpell, EFFECT_1);
+
+                CastCustomSpell(pVictim, 77800, &mana, &effect, &effect, true, 0, 0, GetGUID());
+                return true;
+            }
 			// Static Shock
             if (dummySpell->SpellIconID == 3059)
             {
@@ -9265,14 +9324,23 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage,
 					}
 					break;
 				}
-				if (auraSpellInfo->Id == 82661) // Aspect of the Fox: Focus bonus
-				{
-					if (!((auraSpellInfo->procFlags
-							& PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK)
-							|| (auraSpellInfo->procFlags
-									& PROC_FLAG_TAKEN_SPELL_MELEE_DMG_CLASS))) return false;
+                if (auraSpellInfo->Id == 82661) // Aspect of the Fox: Focus bonus
+                {
+                    uint32 basepoints = 0;
+                    if (!((auraSpellInfo->procFlags
+                            & PROC_FLAG_TAKEN_MELEE_AUTO_ATTACK)
+                            || (auraSpellInfo->procFlags
+                                    & PROC_FLAG_TAKEN_SPELL_MELEE_DMG_CLASS))) return false;
+
+                    //One With Nature
+                    if (AuraEffect* aurEff = ToPlayer()->GetDummyAuraEffect(SPELLFAMILY_HUNTER, 5080, 1))
+                    {
+                        SpellEntry const* spellproto = aurEff->GetSpellProto();
+                        basepoints = spellproto->EffectBasePoints[1];
+                    }
+       
 					target = this;
-					basepoints0 = auraSpellInfo->EffectBasePoints [0];
+					basepoints0 = auraSpellInfo->EffectBasePoints [0] + basepoints;
 					trigger_spell_id = 82716;
 					break;
 				}

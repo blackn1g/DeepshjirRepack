@@ -50,6 +50,51 @@ enum ShamanSpells {
 	SHAMAN_SPELL_UNLEASH_ELEMENTS = 73680,
 
     SHAMAN_SPELL_EARTHQUAKE_KNOCKDOWN = 77505,
+    SHAMAN_SPELL_SEARING_FLAMES = 77661,
+};
+
+// Searing Bolt - 3606
+class spell_sha_searing_bolt : public SpellScriptLoader
+{
+    public:
+        spell_sha_searing_bolt() : SpellScriptLoader("spell_sha_searing_bolt") { }
+
+        class spell_sha_searing_bolt_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_sha_searing_bolt_SpellScript);
+
+            bool Validate(SpellEntry const* /*spellInfo*/)
+            {
+                if (!sSpellStore.LookupEntry(SHAMAN_SPELL_SEARING_FLAMES))
+                    return false;
+                return true;
+            }
+
+            void HandleOnHit()
+            {
+                if(Unit* caster = GetCaster()->GetOwner())
+                {
+                    // Searing Flames
+                    if (AuraEffect * aurEff = caster->GetDummyAuraEffect(SPELLFAMILY_SHAMAN, 680, 0))
+                        if (roll_chance_i(aurEff->GetAmount()))
+                        {
+                            int32 damage = GetHitDamage();
+                            int32 bp0 = damage + GetHitUnit()->GetRemainingDotDamage(caster->GetGUID(), SHAMAN_SPELL_SEARING_FLAMES);
+                            caster->CastCustomSpell(GetHitUnit(), SHAMAN_SPELL_SEARING_FLAMES, &bp0, NULL, NULL, true, 0, 0, caster->GetGUID());
+                        }
+                }
+            }
+
+            void Register()
+            {
+                OnHit += SpellHitFn(spell_sha_searing_bolt_SpellScript::HandleOnHit);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_sha_searing_bolt_SpellScript;
+        }
 };
 
 // 77478 - Earthquake
@@ -62,7 +107,7 @@ class spell_sha_earthquake : public SpellScriptLoader
         {
             PrepareSpellScript(spell_sha_earthquake_SpellScript);
 
-			bool Validate(SpellEntry const* /*spellInfo*/)
+            bool Validate(SpellEntry const* /*spellInfo*/)
             {
                 if (!sSpellStore.LookupEntry(SHAMAN_SPELL_EARTHQUAKE_KNOCKDOWN))
                     return false;
@@ -71,11 +116,11 @@ class spell_sha_earthquake : public SpellScriptLoader
 
             void OnQuake()
             {
-				int32 chance = SpellMgr::CalculateSpellEffectAmount(GetSpellInfo(), EFFECT_1);
-			    Unit* target = GetHitUnit();
-				sLog->outBasic("Chance: %i", chance);
-				if (roll_chance_i(chance))
-				    GetCaster()->CastSpell(target, SHAMAN_SPELL_EARTHQUAKE_KNOCKDOWN, true);
+                int32 chance = SpellMgr::CalculateSpellEffectAmount(GetSpellInfo(), EFFECT_1);
+                Unit* target = GetHitUnit();
+
+                if (roll_chance_i(chance))
+                    GetCaster()->CastSpell(target, SHAMAN_SPELL_EARTHQUAKE_KNOCKDOWN, true);
             }
 
             void Register()
@@ -491,4 +536,5 @@ void AddSC_shaman_spell_scripts() {
 	new spell_sha_fulmination();
 	new spell_sha_healing_rain();
     new spell_sha_earthquake();
+    new spell_sha_searing_bolt();
 }
