@@ -8,4 +8,4 @@ build/
 *.kdev*
 *.bak
 *.patch
-sql/full_world/deepshjir_world.sql
+sql/world_builder/deepshjir_world_full.sql
