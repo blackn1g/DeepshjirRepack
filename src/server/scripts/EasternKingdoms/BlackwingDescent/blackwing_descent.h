@@ -79,4 +79,9 @@ enum Creatures
     NPC_POISON_CLOUD = 42934,
 };
 
+enum Gameobjects
+{
+    GOB_DOOR_PRE_BOSSES = 402092,
+};
+
 #endif

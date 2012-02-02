@@ -62,6 +62,9 @@ public:
         // Misc
         uint32 uiEncounter[MAX_ENCOUNTER];
 
+        // Gobs
+        uint64 gobPreBossDoor;
+
         void Initialize()
         {
             for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
@@ -89,6 +92,9 @@ public:
             // Nefarian
             uiNefarian = 0;
             uiOnyxia = 0;
+
+            // Gobs
+            gobPreBossDoor = 0;
         }
 
         bool IsEncounterInProgress() const
@@ -154,6 +160,13 @@ public:
 
         void OnGameObjectCreate(GameObject* go)
         {
+            switch(go->GetEntry())
+            {
+            case GOB_DOOR_PRE_BOSSES:
+                gobPreBossDoor = go->GetGUID();
+                HandleGameObject(NULL, false, go);
+                break;
+            }
         }
 
         uint64 GetData64(uint32 identifier)
@@ -222,6 +235,10 @@ public:
                 RewardValorPoints();
                 SaveToDB();
             }
+            /*
+            if(Encounter[type] && Encounter[type])
+                HandleGameObject(NULL, false, insta);
+                */
         }
 
         std::string GetSaveData()
