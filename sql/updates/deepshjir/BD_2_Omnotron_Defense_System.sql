@@ -1,14 +1,15 @@
 -- Omnotron Defense System Blackwing Descent
 -- by Naios
+UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_omnotron' WHERE `entry`=42186 LIMIT 1;
 
 UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_magmatron' WHERE `entry`=42178 LIMIT 1;
 UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_toxitron' WHERE `entry`=42180 LIMIT 1;
 UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_electron' WHERE `entry`=42179 LIMIT 1;
 UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_arcanotron' WHERE `entry`=42166 LIMIT 1;
 
-UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_omnotron' WHERE `entry`=42186 LIMIT 1;
+UPDATE `creature_template` SET `AIName`='', `ScriptName`='npc_poison_bomb' WHERE `entry`=42897 LIMIT 1;
 
-DELETE FROM `smart_scripts` WHERE `entryorguid` IN(42178, 42180, 42179, 42166);
+DELETE FROM `smart_scripts` WHERE `entryorguid` IN(42178, 42180, 42179, 42166, 42186, 42186);
 
 -- Trons
 DELETE FROM `creature` WHERE `guid` IN(1082113, 1082115, 1082117, 1082119);
@@ -40,3 +41,15 @@ DELETE FROM `waypoint_data` WHERE `id` = 10821150;
 INSERT INTO `waypoint_data` (`id`, `point`, `position_x`, `position_y`, `position_z`, `delay`, `move_flag`, `action`, `action_chance`, `wpguid`) VALUES
 (10821150, 1, -315.853, -400.56, 213.974, 1500, 0, 0, 100, 0),
 (10821150, 2, -334.152, -400.321, 214.005, 1500, 0, 0, 100, 0);
+
+-- Abilities
+-- Toxitron
+
+-- Chemical Cloud
+DELETE FROM `creature_template_addon` WHERE `entry` = 42934;
+INSERT INTO `creature_template_addon` (`entry`, `path_id`, `mount`, `bytes1`, `bytes2`, `emote`, `auras`)
+VALUES (42934, 0, 0, 0, 0, 0, '91474 0');
+
+UPDATE `creature_template` SET `unit_flags`=33554436, `type_flags`=1024 WHERE `entry`=42934 LIMIT 1;
+
+

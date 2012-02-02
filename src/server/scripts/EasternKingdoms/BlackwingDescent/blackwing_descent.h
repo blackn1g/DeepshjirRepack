@@ -71,6 +71,12 @@ enum Creatures
 	NPC_LAVA_PARASITE = 41806,
 	NPC_PILLAR_OF_FLAME_TRIGGER = 41843,
 	NPC_BLAZING_BONE_CONSTRUCT = 49416,
+
+    // Omnotron Defense System
+
+    // Toxitron
+    NPC_POISON_BOMB = 42897,
+    NPC_POISON_CLOUD = 42934,
 };
 
 #endif

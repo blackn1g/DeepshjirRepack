@@ -1,7 +1,29 @@
 /*
-* Copyright (C) 2011 True Blood <http://www.trueblood-servers.com/>
-* By Asardial
-*/
+ * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+ *
+ * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+ *
+ * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ *
+ * Copyright (C) 2011 True Blood <http://www.trueblood-servers.com/>
+ * By Asardial
+ *
+ * Copyright (C) 2012 DeepshjirCataclysm Repack
+ * By Naios
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "ScriptPCH.h"
 #include "ScriptedCreature.h"
@@ -30,6 +52,7 @@
 enum Spells
 {
     // Omnitron
+    SPELL_INACTIVE=78726,
     SPELL_SHUTING_DOWN = 78746,
     SPELL_ACTIVATED = 78740,
     // Electron
@@ -90,6 +113,7 @@ enum Actions
 {
     ACTION_OMNOTRON_START_EVENT,
     ACTION_OMNOTRON_RESET,
+    ACTION_OMNNOTRON_EVENT_FINISHED,
 };
 
 enum DirectAccess
@@ -142,10 +166,12 @@ public:
             if(!eventActive)
                 return;
 
+            return;
             events.Update(diff);
 
             while (uint32 eventId = events.ExecuteEvent())
             {
+                
                 /*switch (eventId)
                 {
 
@@ -162,35 +188,65 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void DoAction(uint32 action)
+        void DoAction(const int32 action)
         {
             switch(action)
             {
             case ACTION_OMNOTRON_START_EVENT:
                 // Start Encounter
 
+                if (instance)
+				instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, IN_PROGRESS);
+
                 eventActive = true;
                 me->MonsterSay("Activated",0,0);
-                
+
+                trons[MAGMATRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_MAGMATRON));
+                trons[TOXITRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_TOXITRON));
+                trons[ELECTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ELECTRON));
+                trons[ARCANOTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ARCANOTRON));
 
                 break;
 
             case ACTION_OMNOTRON_RESET:
                 // Resets Encounter
 
+                if (instance)
+				instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, FAIL);
+
                 if(eventActive)
                 {
                     eventActive = false;
 
                     me->MonsterSay("Reset",0,0);
-
-                    trons[MAGMATRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_MAGMATRON));
-                    trons[TOXITRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_TOXITRON));
-                    trons[ELECTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ELECTRON));
-                    trons[ARCANOTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ARCANOTRON));
+                    DespawnMinions();
                 }
                 break;
+
+            case ACTION_OMNNOTRON_EVENT_FINISHED:
+                if (instance)
+				instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, DONE);
+
+                break;
             }
+        }
+
+        inline void DespawnMinions()
+        {
+            DespawnCreatures(NPC_POISON_BOMB);
+            DespawnCreatures(NPC_POISON_CLOUD);
+        }
+
+        void DespawnCreatures(uint32 entry)
+        {
+            std::list<Creature*> creatures;
+            GetCreatureListWithEntryInGrid(creatures, me, entry, 200.0f);
+
+            if (creatures.empty())
+                return;
+
+            for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
+                (*iter)->DespawnOrUnsummon();
         }
     };
 };
@@ -200,6 +256,9 @@ struct mob_tron_dummyAI : public ScriptedAI
     mob_tron_dummyAI(Creature* creature) : ScriptedAI(creature)
     {
         instance = creature->GetInstanceScript();
+
+        if(creature->GetEntry() != NPC_TOXITRON)
+            creature->AddAura(SPELL_INACTIVE,me);
     }
 
     InstanceScript* instance;
@@ -209,8 +268,7 @@ struct mob_tron_dummyAI : public ScriptedAI
         ResetTron();
 
         if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
-            omnotron->GetAI()->DoAction(ACTION_OMNOTRON_START_EVENT);
-
+            omnotron->GetAI()->DoAction(ACTION_OMNOTRON_RESET);
     }
 
     void ResetTron()
@@ -220,7 +278,9 @@ struct mob_tron_dummyAI : public ScriptedAI
 
         if(me->GetEntry() != NPC_TOXITRON) // Toxitron is using waypoints
         {
-            me->AddUnitState(UNIT_STAT_STUNNED);
+            if(!me->HasAura(SPELL_INACTIVE))
+                DoCast(me,SPELL_SHUTING_DOWN);
+
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
         }
     }
@@ -446,9 +506,9 @@ public :
 
     struct boss_toxitronAI : public mob_tron_dummyAI 
     {
-        boss_toxitronAI(Creature * pCreature) : mob_tron_dummyAI(pCreature)
+        boss_toxitronAI(Creature * creature) : mob_tron_dummyAI(creature)
         {
-            instance = pCreature->GetInstanceScript();
+            instance = creature->GetInstanceScript();
         }
 
         InstanceScript* instance;
@@ -469,7 +529,9 @@ public :
             events.ScheduleEvent(EVENT_SHUTING_DOWN_TOXITRON, 65000);
 
             if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
-                omnotron->GetAI()->DoAction(ACTION_OMNOTRON_START_EVENT);
+                omnotron->AI()->DoAction(ACTION_OMNOTRON_START_EVENT);
+
+            DoCast(me,SPELL_ACTIVATED);
         }
 
         void JustDied(Unit* /*Killer*/)

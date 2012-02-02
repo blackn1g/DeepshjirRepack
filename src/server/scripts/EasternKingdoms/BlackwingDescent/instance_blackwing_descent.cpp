@@ -100,7 +100,7 @@ public:
             return false;
         }
 
-        void OnCreatureCreate(Creature* creature)
+        void OnCreatureCreate(Creature* creature, bool /*add*/)
         {
             switch (creature->GetEntry())
             {
@@ -156,9 +156,9 @@ public:
         {
         }
 
-        uint64 GetData64(uint32 type)
+        uint64 GetData64(uint32 identifier)
         {
-            switch(type)
+            switch(identifier)
             {
             case BOSS_MAGMAW:
                 return uiMagmaw; 
@@ -203,11 +203,9 @@ public:
             case BOSS_ONYXIA:
                 return uiOnyxia; 
                 break;
-
-            default:
-                return NULL;
-                break;
             }
+
+            return NULL;
         }
 
         uint32 GetData(uint32 type)
