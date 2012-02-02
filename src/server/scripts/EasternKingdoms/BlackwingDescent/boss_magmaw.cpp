@@ -358,7 +358,7 @@ public:
 		void Reset()
 		{
 			if(magmaw == NULL)
-			magmaw =  me->FindNearestCreature(NPC_MAGMAW,1000.0f, true);
+			magmaw =  me->FindNearestCreature(BOSS_MAGMAW,1000.0f, true);
 		}
 
 		void EnterCombat(Unit* /*who*/) {}
