@@ -1,3 +1,7 @@
+/********************
+* (C) DeepshjirCataclysm Repack
+*  by Naios (2012)
+********************/
 
 -- Fix quest-requirements for "A Meeting With Fate"
 UPDATE quest_template SET RequiredRaces=690 WHERE entry=12755;

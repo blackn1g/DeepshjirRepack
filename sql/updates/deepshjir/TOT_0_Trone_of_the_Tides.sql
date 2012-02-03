@@ -1,5 +1,8 @@
+/********************
+* (C) DeepshjirCataclysm Repack
+*  by Naios (2012)
+********************/
 -- Throne of the Tides Updates
--- by Naios
 
 -- Gursha removes SmartAI and assign scriptnames
 

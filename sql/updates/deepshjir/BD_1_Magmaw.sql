@@ -1,5 +1,8 @@
+/********************
+* (C) DeepshjirCataclysm Repack
+*  by Naios (2012)
+********************/
 -- Magmaw (Blackwing Descent) Updates
--- by Naios
 
 DELETE FROM `vehicle_accessory` WHERE `entry` = 41570;
 INSERT INTO `vehicle_accessory` (`entry`, `accessory_entry`, `seat_id`, `minion`, `description`)

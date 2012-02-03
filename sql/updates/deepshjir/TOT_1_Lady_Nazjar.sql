@@ -1,5 +1,8 @@
+/********************
+* (C) DeepshjirCataclysm Repack
+*  by Naios (2012)
+********************/
 -- Lady Nazjar Updates
--- by Naios
 
 -- She is spawned twice...
 DELETE FROM `creature` WHERE `guid` = 1086658 AND `id` = 39959;

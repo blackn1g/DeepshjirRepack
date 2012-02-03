@@ -1,10 +1,15 @@
+/********************
+* (C) DeepshjirCataclysm Repack
+*  by Naios (2012)
+********************/
 -- Blackwing Descent Misc
--- by Naios
+ 
+DELETE FROM `gameobject` WHERE `guid` IN(189283);
+DELETE FROM `gameobject` WHERE `id` IN(/*Deletes gobs that are spawned through this script*/207834, 402092, 204929, 203306,/*Deletes unofficial gobs*/ 202211, 205079, 24388, 203083, 207207) AND `map` = 669;
 
-DELETE FROM `gameobject` WHERE `id` IN(207834, 402092, 204929, 203306) AND `map` = 669;
 INSERT INTO `gameobject` (`id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`, `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`, `animprogress`, `state`) VALUES
 -- Onyxia Elevator
-(207834, 669, 15, 1, -109.87, -223.157, 11.5354, 1.79425, 0, 0, 0.781537, 0.623858, 300, 1, 0),
+(207834, 669, 15, 1, -109.87, -223.157, 11.5354, 1.79425, 0, 0, 0.781537, 0.623858, 300, 1, 1),
 -- Pre-Boss Gate
 (402092, 669, 15, 1, -270.2, -224.415, 190.316, 3.1307, 0, 0, 0.999985, 0.00544851, 300, 0, 1),
 -- Finkles Cage
@@ -24,4 +29,17 @@ REPLACE INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `modelid
 (1082133, 41378, 669, 15, 1, 0, 0, -106.063, -464.796, 73.4545, 1.53706, 300, 0, 0, 86579136, 0, 0, 0, 0, 0, 0);
 
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `faction`, `flags`, `size`, `questItem1`, `questItem2`, `questItem3`, `questItem4`, `questItem5`, `questItem6`, `data0`, `data1`, `data2`, `data3`, `data4`, `data5`, `data6`, `data7`, `data8`, `data9`, `data10`, `data11`, `data12`, `data13`, `data14`, `data15`, `data16`, `data17`, `data18`, `data19`, `data20`, `data21`, `data22`, `data23`, `data24`, `data25`, `data26`, `data27`, `data28`, `data29`, `data30`, `data31`, `AIName`, `ScriptName`, `WDBVerified`) VALUES
-(402092, 0, 9946, 'BLACKROCKV2_PORTCULLIS_02', '1375', '32', '0', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 13623);
+(402092, 0, 9946, 'BLACKROCKV2_PORTCULLIS_02', '','','',1375, 32, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 13623),
+(203716, 11, 10407, 'Blackwing Descent Elevator', '', '', '', 0, 40, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 13623),
+(207834, 11, 10363, 'Doodad_BlackWingV2_Elevator_Onyxia01', '', '', '', 0, 40, 1, 0, 0, 0, 0, 0, 0, 13333, 0, 0, 0, 0, 748, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 13623);
+
+UPDATE `gameobject` SET `spawnMask` = 15 WHERE `map` = 669;
+
+-- elevator 205079
+
+/*
+INSERT INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `faction`, `flags`, `size`, `questItem1`, `questItem2`, `questItem3`, `questItem4`, `questItem5`, `questItem6`, `data0`, `data1`, `data2`, `data3`, `data4`, `data5`, `data6`, `data7`, `data8`, `data9`, `data10`, `data11`, `data12`, `data13`, `data14`, `data15`, `data16`, `data17`, `data18`, `data19`, `data20`, `data21`, `data22`, `data23`, `data24`, `data25`, `data26`, `data27`, `data28`, `data29`, `data30`, `data31`, `AIName`, `ScriptName`, `WDBVerified`) VALUES
+
+(205079, 11, 807, 'GnomeElevator01', '', '', '', 0, 40, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '', '', 1);
+
+*/

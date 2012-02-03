@@ -1,5 +1,8 @@
+/********************
+* (C) DeepshjirCataclysm Repack
+*  by Naios (2012)
+********************/
 -- Ascendant Council (Bastion of Twilight) Updates
--- by Naios
 
 -- I really hate SmartAI on Bosses!!!!
 UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_feludius' WHERE `entry`=43687 LIMIT 1;

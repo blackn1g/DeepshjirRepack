@@ -1,5 +1,9 @@
--- Omnotron Defense System Blackwing Descent
--- by Naios
+/********************
+* (C) DeepshjirCataclysm Repack
+*  by Naios (2012)
+********************/
+-- Omnotron Defense System (Blackwing Descent)
+
 UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_omnotron' WHERE `entry`=42186 LIMIT 1;
 
 UPDATE `creature_template` SET `AIName`='', `ScriptName`='boss_magmatron' WHERE `entry`=42178 LIMIT 1;
