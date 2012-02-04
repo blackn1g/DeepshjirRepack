@@ -34,23 +34,24 @@ enum Data64
 
 enum CreatureIds
 {
-    BOSS_ANSHAL = 45870,
-    BOSS_NEZIR = 45871,
-    BOSS_ROHASH = 45872,
+    BOSS_ANSHAL                     = 45870,
+    BOSS_NEZIR                      = 45871,
+    BOSS_ROHASH                     = 45872,
 
-    BOSS_ALAKIR = 46753,
+    BOSS_ALAKIR                     = 46753,
 
     // Conclave of Wind
-    NPC_SOOTHING_BREEZE = 46246,
-    NPC_RAVENOUS_CREEPER = 45812,
-    NPC_ICE_PATCH = 46186,
+    NPC_SOOTHING_BREEZE             = 46246,
+    NPC_RAVENOUS_CREEPER            = 45812,
+    NPC_RAVENOUS_CREEPER_TRIGGER    = 45813,
+    NPC_ICE_PATCH                   = 46186,
 };
 
 enum InstanceSpells
 {
-    SPELL_PRE_COMBAT_EFFECT_ANSHAL = 85537,
-    SPELL_PRE_COMBAT_EFFECT_NEZIR = 85532,
-    SPELL_PRE_COMBAT_EFFECT_ROHASH = 85538,
+    SPELL_PRE_COMBAT_EFFECT_ANSHAL  = 85537,
+    SPELL_PRE_COMBAT_EFFECT_NEZIR   = 85532,
+    SPELL_PRE_COMBAT_EFFECT_ROHASH  = 85538,
 };
 
 #endif

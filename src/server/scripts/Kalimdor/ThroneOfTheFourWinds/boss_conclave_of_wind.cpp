@@ -32,6 +32,10 @@ enum Spells
     SPELL_SOOTHING_BREEZE_VISUAL    = 86208,
 
     SPELL_NURTURE                   = 85422,
+    SPELL_NURTURE_DUMMY_AURA        = 85428,
+    SPELL_NURTURE_CREEPER_SUMMON    = 85429,
+
+    SPELL_ZEPHYR                    = 84638,
 
     SPELL_WITHERING_WIND            = 85576,
 
@@ -43,6 +47,7 @@ enum Spells
     SPELL_PERMAFROST                = 86082,
     SPELL_WIND_CHILL                = 84645,
     SPELL_CHILLING_WINDS            = 85578,
+
     SPELL_SLEET_STORM_ULTIMATE      = 84644,
 
     // Rohash
@@ -59,7 +64,7 @@ enum Spells
 enum Events
 {
     // Anshal
-    EVENT_SOOTHING_BREEZE = 1,
+    EVENT_SOOTHING_BREEZE           = 1,
     EVENT_NURTURE,
 
     // Nezir
@@ -426,9 +431,44 @@ public:
     };
 };
 
+class spell_nurture_aura : public SpellScriptLoader
+{
+    public:
+        spell_nurture_aura() : SpellScriptLoader("spell_nurture_aura") {}
+
+        class spell_nurture_aura_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_nurture_aura_AuraScript);
+
+            void HandleEffectCalcPeriodic(AuraEffect const * /*aurEff*/, bool & isPeriodic, int32 & amplitude)
+            {
+                isPeriodic = true;
+                amplitude = 1920;
+            }
+
+            void HandlePeriodic(AuraEffect const* aurEff)
+            {
+                if (Unit* caster = GetCaster())
+                    caster->CastSpell(caster,SPELL_NURTURE_CREEPER_SUMMON,true);
+            }
+
+            void Register()
+            {
+                DoEffectCalcPeriodic += AuraEffectCalcPeriodicFn(spell_nurture_aura_AuraScript::HandleEffectCalcPeriodic, EFFECT_0, SPELL_AURA_DUMMY);
+                OnEffectPeriodic += AuraEffectPeriodicFn(spell_nurture_aura_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_DUMMY);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_nurture_aura_AuraScript();
+        }
+};
+
 void AddSC_boss_conclave_of_wind()
 {
     new boss_anshal();
     new boss_nezir();
     new boss_rohash();
+    new spell_nurture_aura();
 }
