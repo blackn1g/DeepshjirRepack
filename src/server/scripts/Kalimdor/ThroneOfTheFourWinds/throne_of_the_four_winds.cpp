@@ -118,7 +118,7 @@ public:
 
             if(linkedSlipstreamObject && linkedBoss)
             {
-                                
+               
 
             }else if(isUltimate)
                 isUltimate = false;

@@ -8,6 +8,11 @@ UPDATE `creature_template` SET `ScriptName`='boss_anshal' , AIName="" WHERE `ent
 UPDATE `creature_template` SET `ScriptName`='boss_nezir' , AIName="" WHERE `entry`=45871 LIMIT 1;
 UPDATE `creature_template` SET `ScriptName`='boss_rohash' , AIName="" WHERE `entry`=45872 LIMIT 1;
 
+REPLACE INTO `creature_template_addon` (`entry`, `path_id`, `mount`, `bytes1`, `bytes2`, `emote`, `auras`) VALUES
+(45870, 0, 0, 0, 0, 0, '96301 0'),
+(45871, 0, 0, 0, 0, 0, '96301 0'),
+(45872, 0, 0, 0, 0, 0, '96301 0');
+
 DELETE FROM `smart_scripts` WHERE `entryorguid` IN(45870, 45871, 45872);
 
 REPLACE INTO `spell_script_names` (`spell_id`, `ScriptName`)

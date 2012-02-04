@@ -35,7 +35,7 @@ enum Spells
     SPELL_NURTURE_DUMMY_AURA        = 85428,
     SPELL_NURTURE_CREEPER_SUMMON    = 85429,
 
-    SPELL_ZEPHYR                    = 84638,
+    SPELL_ZEPHYR_ULTIMATE           = 84638,
 
     SPELL_WITHERING_WIND            = 85576,
 
@@ -95,27 +95,30 @@ public:
         {
             instance = creature->GetInstanceScript();
 
-            creature->RemoveFlag(UNIT_FIELD_FLAGS_2,UNIT_FLAG2_REGENERATE_POWER);
-
-            creature->setPowerType(POWER_ENERGY);
+            creature->setPowerType(POWER_MANA);
+            creature->SetMaxPower(POWER_MANA, 90);
         }
 
         InstanceScript* instance;
         EventMap events;
+        uint32 uiRegentimer;
 
         void Reset()
         {
             instance->SetData(DATA_CONCLAVE_OF_WIND_EVENT, NOT_STARTED);
+
             DespawnMinions();
 
-            me->SetPower(POWER_ENERGY,0);
             events.Reset();
             me->GetMotionMaster()->MoveTargetedHome();
+
+            uiRegentimer = 100;
+            me->SetPower(POWER_MANA,0);
         }
 
         void EnterCombat(Unit* who)
         {
-
+            me->SetPower(POWER_MANA,0);
             instance->SetData(DATA_CONCLAVE_OF_WIND_EVENT, IN_PROGRESS);
 
             events.ScheduleEvent(EVENT_SOOTHING_BREEZE, urand(13000,15000));
@@ -129,6 +132,20 @@ public:
 
             if(instance->GetData(DATA_CONCLAVE_OF_WIND_EVENT) == IN_PROGRESS)
             {
+                if(uiRegentimer <= diff)
+                {
+                    if(me->GetPower(POWER_MANA) == 90)
+                    {
+                        DoCastVictim(SPELL_ZEPHYR_ULTIMATE);
+                        me->SetPower(POWER_MANA,0);
+                    }
+                    else
+                        me->SetPower(POWER_MANA,me->GetPower(POWER_MANA)+1);
+
+                    uiRegentimer = 100;
+                }                
+                else uiRegentimer -= diff;
+
                 if(!SelectTarget(SELECT_TARGET_NEAREST, 0, 10, true))
                 {
                     if (!me->HasAura(SPELL_WITHERING_WIND))
@@ -212,13 +229,13 @@ public:
         {
             instance = creature->GetInstanceScript();
 
-            creature->RemoveFlag(UNIT_FIELD_FLAGS_2,UNIT_FLAG2_REGENERATE_POWER);
-
-            creature->setPowerType(POWER_ENERGY);
+            creature->setPowerType(POWER_MANA);
+            creature->SetMaxPower(POWER_MANA, 90);
         }
 
         InstanceScript* instance;
         EventMap events;
+        uint32 uiRegentimer;
 
         void Reset()
         {
@@ -226,13 +243,16 @@ public:
 
             DespawnMinions();
 
-            me->SetPower(POWER_ENERGY,0);
             events.Reset();
             me->GetMotionMaster()->MoveTargetedHome();
+
+            uiRegentimer = 100;
+            me->SetPower(POWER_MANA,0);
         }
 
         void EnterCombat(Unit* who)
         {
+            me->SetPower(POWER_MANA,0);
             instance->SetData(DATA_CONCLAVE_OF_WIND_EVENT, IN_PROGRESS);
 
             events.ScheduleEvent(EVENT_ICE_PATCH, urand(10000,12000));
@@ -248,6 +268,20 @@ public:
 
             if(instance->GetData(DATA_CONCLAVE_OF_WIND_EVENT) == IN_PROGRESS)
             {
+                if(uiRegentimer <= diff)
+                {
+                    if(me->GetPower(POWER_MANA) == 90)
+                    {
+                        DoCastVictim(SPELL_SLEET_STORM_ULTIMATE);
+                        me->SetPower(POWER_MANA,0);
+                    }
+                    else
+                        me->SetPower(POWER_MANA,me->GetPower(POWER_MANA)+1);     
+
+                    uiRegentimer = 100;
+                }                
+                else uiRegentimer -= diff;
+
                 if(!SelectTarget(SELECT_TARGET_NEAREST, 0, 10, true))
                 {
                     if (!me->HasAura(SPELL_CHILLING_WINDS))
@@ -285,12 +319,6 @@ public:
                     DoCastAOE(SPELL_WIND_CHILL);
 
                     events.ScheduleEvent(EVENT_WIND_CHILL, 15000);
-                    break;
-
-                case EVENT_SLEET_STORM_ULTIMATE:
-                    DoCastVictim(SPELL_SLEET_STORM_ULTIMATE);
-
-                    events.ScheduleEvent(EVENT_SLEET_STORM_ULTIMATE, 60000);
                     break;
 
                 default:
@@ -342,14 +370,13 @@ public:
         {
             instance = creature->GetInstanceScript();
 
-            creature->RemoveFlag(UNIT_FIELD_FLAGS_2,UNIT_FLAG2_REGENERATE_POWER);
-
-            creature->setPowerType(POWER_ENERGY);
+            creature->setPowerType(POWER_MANA);
+            creature->SetMaxPower(POWER_MANA, 90);
         }
 
         InstanceScript* instance;
         EventMap events;
-        uint32 regenPower;
+        uint32 uiRegentimer;
 
         bool IsCastingWindBlast;
 
@@ -358,13 +385,17 @@ public:
             instance->SetData(DATA_CONCLAVE_OF_WIND_EVENT, NOT_STARTED);
 
             IsCastingWindBlast = false;
-            me->SetPower(POWER_ENERGY,0);
+
             events.Reset();
             me->GetMotionMaster()->MoveTargetedHome();
+
+            uiRegentimer = 100;
+            me->SetPower(POWER_MANA,0);
         }
 
         void EnterCombat(Unit* who)
         {
+            me->SetPower(POWER_MANA,0);
             instance->SetData(DATA_CONCLAVE_OF_WIND_EVENT, IN_PROGRESS);
 
             events.ScheduleEvent(EVENT_SLICING_GALE, 10000);
@@ -379,6 +410,20 @@ public:
 
             if(instance->GetData(DATA_CONCLAVE_OF_WIND_EVENT) == IN_PROGRESS)
             {
+                if(uiRegentimer <= diff)
+                {
+                    if(me->GetPower(POWER_MANA) == 90)
+                    {
+                        DoCastVictim(SPELL_HURRICANE_ULTIMATE);
+                        me->SetPower(POWER_MANA,0);
+                    }
+                    else
+                        me->SetPower(POWER_MANA,me->GetPower(POWER_MANA)+1);     
+
+                    uiRegentimer = 100;
+                }                
+                else uiRegentimer -= diff;
+
                 if(!SelectTarget(SELECT_TARGET_NEAREST, 0, 10, true))
                 {
                     if (!me->HasAura(SPELL_DEAFING_WINDS))
@@ -433,36 +478,36 @@ public:
 
 class spell_nurture_aura : public SpellScriptLoader
 {
-    public:
-        spell_nurture_aura() : SpellScriptLoader("spell_nurture_aura") {}
+public:
+    spell_nurture_aura() : SpellScriptLoader("spell_nurture_aura") {}
 
-        class spell_nurture_aura_AuraScript : public AuraScript
+    class spell_nurture_aura_AuraScript : public AuraScript
+    {
+        PrepareAuraScript(spell_nurture_aura_AuraScript);
+
+        void HandleEffectCalcPeriodic(AuraEffect const * /*aurEff*/, bool & isPeriodic, int32 & amplitude)
         {
-            PrepareAuraScript(spell_nurture_aura_AuraScript);
-
-            void HandleEffectCalcPeriodic(AuraEffect const * /*aurEff*/, bool & isPeriodic, int32 & amplitude)
-            {
-                isPeriodic = true;
-                amplitude = 1920;
-            }
-
-            void HandlePeriodic(AuraEffect const* aurEff)
-            {
-                if (Unit* caster = GetCaster())
-                    caster->CastSpell(caster,SPELL_NURTURE_CREEPER_SUMMON,true);
-            }
-
-            void Register()
-            {
-                DoEffectCalcPeriodic += AuraEffectCalcPeriodicFn(spell_nurture_aura_AuraScript::HandleEffectCalcPeriodic, EFFECT_0, SPELL_AURA_DUMMY);
-                OnEffectPeriodic += AuraEffectPeriodicFn(spell_nurture_aura_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_DUMMY);
-            }
-        };
-
-        AuraScript* GetAuraScript() const
-        {
-            return new spell_nurture_aura_AuraScript();
+            isPeriodic = true;
+            amplitude = 1920;
         }
+
+        void HandlePeriodic(AuraEffect const* aurEff)
+        {
+            if (Unit* caster = GetCaster())
+                caster->CastSpell(caster,SPELL_NURTURE_CREEPER_SUMMON,true);
+        }
+
+        void Register()
+        {
+            DoEffectCalcPeriodic += AuraEffectCalcPeriodicFn(spell_nurture_aura_AuraScript::HandleEffectCalcPeriodic, EFFECT_0, SPELL_AURA_DUMMY);
+            OnEffectPeriodic += AuraEffectPeriodicFn(spell_nurture_aura_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_DUMMY);
+        }
+    };
+
+    AuraScript* GetAuraScript() const
+    {
+        return new spell_nurture_aura_AuraScript();
+    }
 };
 
 void AddSC_boss_conclave_of_wind()
