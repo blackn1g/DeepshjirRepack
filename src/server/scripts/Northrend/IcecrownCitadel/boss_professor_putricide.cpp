@@ -1486,8 +1486,10 @@ void AddSC_boss_professor_putricide()
     new boss_professor_putricide();
     new npc_volatile_ooze();
     new spell_putricide_gaseous_bloat();
-    new spell_putricide_ooze_channel();
-    new spell_putricide_slime_puddle();
+	// @ Startup Error
+    //new spell_putricide_ooze_channel();
+	// @ Startup Error
+    // new spell_putricide_slime_puddle();
     new spell_putricide_slime_puddle_aura();
     new spell_putricide_unstable_experiment();
     new spell_putricide_ooze_summon();

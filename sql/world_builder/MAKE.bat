@@ -4,7 +4,7 @@ echo Merging Updates...
 del deepshjir_world_full.sql
 copy /A Build_base_DB\world_base.sql +..\updates\deepshjir\*sql deepshjir_world_full.sql
 
-echo Execute updates...
+echo Importing WOrld DB...
 
 set svr=localhost
 set user=server
@@ -13,6 +13,9 @@ set port=3306
 set wdb=rg_world
 
 Build_base_DB\mysql -q -s -h %svr% --user=%user% --password=%pass% --port=%port% --port=3306 deepshjir_world<  deepshjir_world_full.sql
+
+echo Fixing errors...
+Build_base_DB\mysql -q -s -h %svr% --user=%user% --password=%pass% --port=%port% --port=3306 deepshjir_world<  db_error_fixer_extended.sql
 
 echo Dumping World Database...
 

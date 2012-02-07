@@ -637,7 +637,8 @@ void AddSC_boss_lord_marrowgar()
     new boss_lord_marrowgar();
     new npc_coldflame();
     new npc_bone_spike();
-    new spell_marrowgar_coldflame();
+	// @ Startup Error
+    // new spell_marrowgar_coldflame();
     new spell_marrowgar_coldflame_bonestorm();
     new spell_marrowgar_coldflame_damage();
     new spell_marrowgar_bone_spike_graveyard();

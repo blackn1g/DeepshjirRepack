@@ -129,6 +129,7 @@ void AddSC_boss_maloriak();
 void AddSC_boss_atramedes();
 void AddSC_boss_magmaw();
 void AddSC_boss_chimaeron();
+void AddSC_blackwing_descent();
 void AddSC_instance_blackwing_descent();
 void AddSC_deadmines();//Deadmines
 void AddSC_instance_deadmines();
@@ -809,6 +810,7 @@ void AddEasternKingdomsScripts() {
     AddSC_boss_atramedes();
     AddSC_boss_magmaw();
     AddSC_boss_chimaeron();
+    AddSC_blackwing_descent();
     AddSC_instance_blackwing_descent();	
 	AddSC_deadmines();//Deadmines
 	AddSC_instance_deadmines();
