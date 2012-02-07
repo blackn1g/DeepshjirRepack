@@ -5,7 +5,7 @@
 -- Blackwing Descent Misc
  
 DELETE FROM `gameobject` WHERE `guid` IN(189283);
-DELETE FROM `gameobject` WHERE `id` IN(/*Deletes gobs that are spawned through this script*/207834, 402092, 204929, 203306,/*Deletes unofficial gobs*/ 202211, 205079, 24388, 203083, 20720, 402368) AND `map` = 669;
+DELETE FROM `gameobject` WHERE `id` IN(/*Deletes gobs that are spawned through this script*/207834, 402092, 204929, 203306,/*Deletes unofficial gobs*/ 202211, 205079, 24388, 203083, 20720, 402368, 185218, 185216, 185217) AND `map` = 669;
 
 INSERT INTO `gameobject` (`id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`, `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`, `animprogress`, `state`) VALUES
 -- Onyxia Elevator
