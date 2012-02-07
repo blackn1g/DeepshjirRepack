@@ -1,0 +1,1 @@
+DELETE FROM `creature` WHERE `guid` = 6618571 AND `id` = 28670;
