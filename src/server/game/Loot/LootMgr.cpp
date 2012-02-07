@@ -240,12 +240,13 @@ void LootStore::CheckLootRefs(LootIdSet* ref_set) const {
 }
 
 void LootStore::ReportUnusedIds(LootIdSet const& ids_set) const {
-	// all still listed ids isn't referenced
+	/*// all still listed ids isn't referenced
 	for (LootIdSet::const_iterator itr = ids_set.begin(); itr != ids_set.end();
 			++itr)
-		sLog->outErrorDb(
+		    // @ Startup Error
+            sLog->outErrorDb(
 				"Table '%s' entry %d isn't %s and not referenced from loot, and then useless.",
-				GetName(), *itr, GetEntryName());
+				GetName(), *itr, GetEntryName());*/
 }
 
 void LootStore::ReportNotExistedId(uint32 id) const {

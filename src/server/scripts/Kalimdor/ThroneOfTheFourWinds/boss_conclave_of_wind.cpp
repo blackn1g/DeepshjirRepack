@@ -112,7 +112,7 @@ public:
             events.Reset();
             me->GetMotionMaster()->MoveTargetedHome();
 
-            uiRegentimer = 100;
+            uiRegentimer = 1000;
             me->SetPower(POWER_MANA,0);
         }
 
@@ -142,7 +142,7 @@ public:
                     else
                         me->SetPower(POWER_MANA,me->GetPower(POWER_MANA)+1);
 
-                    uiRegentimer = 100;
+                    uiRegentimer = 1000;
                 }                
                 else uiRegentimer -= diff;
 
@@ -246,7 +246,7 @@ public:
             events.Reset();
             me->GetMotionMaster()->MoveTargetedHome();
 
-            uiRegentimer = 100;
+            uiRegentimer = 1000;
             me->SetPower(POWER_MANA,0);
         }
 
@@ -278,7 +278,7 @@ public:
                     else
                         me->SetPower(POWER_MANA,me->GetPower(POWER_MANA)+1);     
 
-                    uiRegentimer = 100;
+                    uiRegentimer = 1000;
                 }                
                 else uiRegentimer -= diff;
 
@@ -389,7 +389,7 @@ public:
             events.Reset();
             me->GetMotionMaster()->MoveTargetedHome();
 
-            uiRegentimer = 100;
+            uiRegentimer = 1000;
             me->SetPower(POWER_MANA,0);
         }
 
@@ -420,7 +420,7 @@ public:
                     else
                         me->SetPower(POWER_MANA,me->GetPower(POWER_MANA)+1);     
 
-                    uiRegentimer = 100;
+                    uiRegentimer = 1000;
                 }                
                 else uiRegentimer -= diff;
 
