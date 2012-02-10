@@ -24,64 +24,69 @@
 
 enum SharedSpells
 {
-    SPELL_BERSERK1 = 26662,
-    SPELL_BERSERK2 = 64238,
+    SPELL_BERSERK1                  = 26662,
+    SPELL_BERSERK2                  = 64238,
 };
 
 enum Data
 {
     //Encounters
-    DATA_MAGMAW = 0,
-    DATA_OMNOTRON_DEFENSE_SYSTEM = 1,
-    DATA_MALORIAK = 2,
-    DATA_ATRAMEDES = 3,
-    DATA_CHIMAERON = 4,
-    DATA_NEFARIAN = 5,
-
-    //Additional Entities
-    DATA_ARCANOTRON_GUID = 6,
-    DATA_ELECTRON_GUID = 7,
-    DATA_MAGMATRON_GUID = 8,
-    DATA_TOXITRON_GUID = 9,
-    DATA_ONYXIA_GUID = 10,
-    DATA_BILE_O_TRON_800 = 11,
+    DATA_MAGMAW,
+    DATA_OMNOTRON_DEFENSE_SYSTEM,
+    DATA_MALORIAK,
+    DATA_ATRAMEDES,
+    DATA_CHIMAERON,
+    DATA_NEFARIAN,
 };
 
 enum Creatures
 {
-    BOSS_MAGMAW = 41570,
-	BOSS_OMNOTRON	= 42186,
-    NPC_ARCANOTRON = 42166,
-    NPC_ELECTRON = 42179,
-    NPC_MAGMATRON = 42178,
-    NPC_TOXITRON = 42180,
-    BOSS_MALORIAK = 41378,
-    BOSS_ATRAMEDES = 41442,
-    BOSS_CHIMAERON = 43296,
-    BOSS_BILE_O_TRON_800 = 44418,
-    BOSS_NEFARIAN = 41376,
-    BOSS_ONYXIA = 41270,
-    NPC_LORD_VICTOR_NEFARIAN = 41379,
-
-	NPC_NEFARIAN_HELPER_HEROIC = 49427,
+    BOSS_MAGMAW                     = 41570,
+	BOSS_OMNOTRON	                = 42186,
+    BOSS_MALORIAK                   = 41378,
+    BOSS_ATRAMEDES                  = 41442,
+    BOSS_CHIMAERON                  = 43296,
+    BOSS_NEFARIAN                   = 41376,
 
 	// Magmaw
-	NPC_MAGMAWS_HEAD = 42347,
-	NPC_IGNITION_TRIGGER = 49447,
-	NPC_LAVA_PARASITE = 41806,
-	NPC_PILLAR_OF_FLAME_TRIGGER = 41843,
-	NPC_BLAZING_BONE_CONSTRUCT = 49416,
+	NPC_MAGMAWS_HEAD                = 42347,
+	NPC_IGNITION_TRIGGER            = 49447,
+	NPC_LAVA_PARASITE               = 41806,
+	NPC_PILLAR_OF_FLAME_TRIGGER     = 41843,
+	NPC_BLAZING_BONE_CONSTRUCT      = 49416,
 
     // Omnotron Defense System
-
     // Toxitron
-    NPC_POISON_BOMB = 42897,
-    NPC_POISON_CLOUD = 42934,
+    NPC_TOXITRON                    = 42180,
+
+    NPC_POISON_BOMB                 = 42897,
+    NPC_POISON_CLOUD                = 42934,
+
+    // Arcanotron
+    NPC_ARCANOTRON                  = 42166,
+
+    // Electron
+    NPC_ELECTRON                    = 42179,
+
+    // Magmatron
+    NPC_MAGMATRON                   = 42178,
+
+
+    // Chimaeron
+    NPC_BILE_O_TRON                 = 44418,
+    NPC_FINKLE_EINHORN              = 44202,
+
+    // Nefarian
+    NPC_ONYXIA = 41270,
+    NPC_LORD_VICTOR_NEFARIAN        = 41379,
+
+    // Misc
+	NPC_NEFARIAN_HELPER_HEROIC      = 49427,
 };
 
 enum Gameobjects
 {
-    GOB_DOOR_PRE_BOSSES = 402092,
+    GOB_DOOR_PRE_BOSSES             = 402092,
 };
 
 #endif

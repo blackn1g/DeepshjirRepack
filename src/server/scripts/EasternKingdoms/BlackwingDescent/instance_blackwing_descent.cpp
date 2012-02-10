@@ -54,6 +54,8 @@ public:
 
         // Chimaeron
         uint64 uiChimaeron;
+        uint64 uiBileOTron;
+        uint64 uiFinkleEinhorn;
 
         // Nefarian
         uint64 uiNefarian;
@@ -88,6 +90,8 @@ public:
 
             // Chimaeron
             uiChimaeron = 0;
+            uiBileOTron = 0;
+            uiFinkleEinhorn = 0;
 
             // Nefarian
             uiNefarian = 0;
@@ -147,12 +151,18 @@ public:
             case BOSS_CHIMAERON: 
                 uiChimaeron = creature->GetGUID(); 
                 break;
+            case NPC_BILE_O_TRON: 
+                uiBileOTron = creature->GetGUID(); 
+                break;
+            case NPC_FINKLE_EINHORN: 
+                uiFinkleEinhorn = creature->GetGUID(); 
+                break;
 
                 // Nefarian
             case BOSS_NEFARIAN: 
                 uiNefarian = creature->GetGUID(); 
                 break;
-            case BOSS_ONYXIA: 
+            case NPC_ONYXIA: 
                 uiOnyxia = creature->GetGUID(); 
                 break;
             }
@@ -208,12 +218,18 @@ public:
             case BOSS_CHIMAERON:
                 return uiChimaeron; 
                 break;
+            case NPC_BILE_O_TRON: 
+                return uiBileOTron; 
+                break;
+            case NPC_FINKLE_EINHORN: 
+                return uiFinkleEinhorn; 
+                break;
 
                 // Nefarian
             case BOSS_NEFARIAN:
                 return uiNefarian; 
                 break;
-            case BOSS_ONYXIA:
+            case NPC_ONYXIA:
                 return uiOnyxia; 
                 break;
             }
