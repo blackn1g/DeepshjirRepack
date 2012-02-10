@@ -21,11 +21,14 @@ INSERT INTO `gameobject` (`id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `
 (402368, 669, 15, 1, 53.670784, -224.593292, 94.5037, 3.130350, 0, 0, 0.999629, 0.0272188, 300, 0, 1);
 
 
-DELETE FROM `creature` WHERE `id` IN(44418, 44202, 41440) AND `map` = 669;
+DELETE FROM `creature` WHERE `id` IN(44418, 44202, 41440, 41377) AND `map` = 669;
 INSERT INTO `creature` (`id`, `map`, `spawnMask`, `phaseMask`, `modelid`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `spawndist`, `currentwaypoint`, `curhealth`, `curmana`, `DeathState`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`) VALUES
 -- Finkle and Bil o tron
 (44418, 669, 15, 1, 0, 0, -110.376, 37.4967, 72.0576, 4.31101, 300, 0, 0, 77490, 0, 0, 0, 0, 0, 0),
-(44202, 669, 15, 1, 0, 0, -115.956, 42.477, 72.0559, 4.65658, 300, 0, 0, 774900, 0, 0, 0, 0, 0, 0);
+(44202, 669, 15, 1, 0, 0, -115.956, 42.477, 72.0559, 4.65658, 300, 0, 0, 774900, 0, 0, 0, 0, 0, 0),
+-- Release Abberations Trigger
+(41377, 669, 15, 1, 0, 0, -75.8496, -427.989, 73.247, 3.44959, 300, 0, 0, 85892, 0, 0, 0, 0, 0, 0);
+
 
 -- Modifys existing spawnpositions
 REPLACE INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `modelid`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `spawndist`, `currentwaypoint`, `curhealth`, `curmana`, `DeathState`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`) VALUES

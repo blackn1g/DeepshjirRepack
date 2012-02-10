@@ -65,10 +65,17 @@ enum Creatures
     // Magmatron
     NPC_MAGMATRON                   = 42178,
 
-
     // Chimaeron
     NPC_BILE_O_TRON                 = 44418,
     NPC_FINKLE_EINHORN              = 44202,
+
+    // Maloriak
+    NPC_ABBERATON                   = 41440,
+    NPC_PRIME_SUBJECT               = 41841,
+    NPC_ABBERATIONS_TRIGGER         = 41377,
+    NPC_FLASH_FREEZE                = 41576,
+    NPC_MAGMA_JET_CONTROLLER        = 50030,
+    NPC_ABSOLUTE_ZERO               = 41961,
 
     // Nefarian
     NPC_ONYXIA = 41270,
