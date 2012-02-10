@@ -48,3 +48,11 @@ UPDATE creature_template SET AIName="SmartAI" WHERE entry=@ENTRY LIMIT 1;
 INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type`,`event_phase_mask`,`event_chance`,`event_flags`,`event_param1`,`event_param2`,`event_param3`,`event_param4`,`action_type`,`action_param1`,`action_param2`,`action_param3`,`action_param4`,`action_param5`,`action_param6`,`target_type`,`target_param1`,`target_param2`,`target_param3`,`target_x`,`target_y`,`target_z`,`target_o`,`comment`) VALUES 
 (@ENTRY,@SOURCETYPE,0,0,8,0,100,0,5185,0,60000,60000,33,47091,0,0,0,0,0,7,0,0,0,0.0,0.0,0.0,0.0,"Healing Touch add Questkill"),
 (@ENTRY,@SOURCETYPE,1,0,8,0,100,0,2061,0,60000,60000,33,47091,0,0,0,0,0,7,0,0,0,0.0,0.0,0.0,0.0,"Flashheal add Questkill");
+
+-- Better Spawnposition for Lord Godfrey
+UPDATE `creature` SET `position_x`=-1766.334351, `position_y`=1351.605957, `position_z`=19.891708, `orientation`=0.480537 WHERE `guid`=500008 LIMIT 1;
+
+DELETE FROM `gameobject` WHERE `id` = 195621;
+
+-- Lord Godfrey is spawned twice 
+DELETE FROM `creature` WHERE guid = 15462569;
