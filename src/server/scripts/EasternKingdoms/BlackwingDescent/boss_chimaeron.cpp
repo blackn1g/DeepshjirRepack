@@ -30,20 +30,26 @@ enum Events
     EVENT_DOUBLE_ATTACK = 1,
     EVENT_CAUSTIC_SLIME,
     EVENT_MASSACRE,
-
+    EVENT_BREAK,
 };
 
 enum Actions
 {
     ACTION_BILE_O_TRON_EVENT_START      = 1,
     ACTION_BILE_O_TRON_SYSTEM_FAILURE,
-    ACTION_RESET,
+    ACTION_BILE_O_TRON_RESET,
 };
 
 enum Spells
 {
     // Chimaeron
+    SPELL_DOUBLE_ATTACK                 = 88826,
+    SPELL_CAUSTIC_SLIME                 = 82935,
     SPELL_MASSACRE                      = 82848,
+    SPELL_FEUD                          = 88872,
+    SPELL_BREAK                         = 82881,
+
+    SPELL_MORTALITY                     = 82934,
 
     // Bile O Tron
     SPELL_FINKLES_MIXTURE               = 82705,
@@ -81,24 +87,34 @@ public:
 
         InstanceScript* instance;
 		EventMap events;
+        uint8 phase;
 		
         void Reset()
 		{
 			events.Reset();
             me->SetReactState(REACT_PASSIVE);
+            phase = 1;
+
+            me->RemoveAura(SPELL_DOUBLE_ATTACK);
+            me->RemoveAura(SPELL_MORTALITY);
 
             if(Creature* finkle_einhorn = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_FINKLE_EINHORN)))
                 finkle_einhorn->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
             if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
-                bile_o_tron->AI()->DoAction(ACTION_RESET);
+                bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_RESET);
 
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            _Reset();
 		}
 
         void EnterCombat(Unit* /*who*/)
 		{		
-			events.ScheduleEvent(EVENT_MASSACRE, urand(10000,12000));
+            events.ScheduleEvent(EVENT_MASSACRE, urand(30000,35000));
+			events.ScheduleEvent(EVENT_DOUBLE_ATTACK, urand(13000,15000));
+            events.ScheduleEvent(EVENT_CAUSTIC_SLIME, urand(10000,12000));
+            events.ScheduleEvent(EVENT_BREAK, urand(14000,16000));
+
+            _EnterCombat();
 		}
 
         void UpdateAI(const uint32 diff)
@@ -106,7 +122,19 @@ public:
 			if (!UpdateVictim() || me->HasUnitState(UNIT_STAT_CASTING))
 				return;
 			
+            if(me->GetHealthPct() < 20 && phase == 1)
+            {
+                phase = 2;
+
+                DoCast(me,SPELL_MORTALITY);
+
+                events.CancelEvent(EVENT_MASSACRE);
+                events.CancelEvent(EVENT_BREAK);
+                events.CancelEvent(EVENT_CAUSTIC_SLIME);
+            }
+
 			events.Update(diff);
+            _DoAggroPulse(diff);
 
 			while (uint32 eventId = events.ExecuteEvent())
 			{
@@ -115,12 +143,29 @@ public:
 
 				case EVENT_MASSACRE:
 					DoCastVictim(SPELL_MASSACRE);
+                    DoCast(me,SPELL_FEUD);
+
                     if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
                         bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_SYSTEM_FAILURE);
 
-					events.ScheduleEvent(EVENT_MASSACRE, urand(40000,45000));
+					events.ScheduleEvent(EVENT_MASSACRE, urand(90000,95000));
 					break;
 				
+                case EVENT_DOUBLE_ATTACK:
+                    DoCast(me, SPELL_DOUBLE_ATTACK);
+                    events.ScheduleEvent(EVENT_DOUBLE_ATTACK, urand(13000,15000));
+                    break;
+
+                case EVENT_CAUSTIC_SLIME:
+                    DoCastAOE(SPELL_CAUSTIC_SLIME);
+                    events.ScheduleEvent(EVENT_CAUSTIC_SLIME, urand(10000,12000));
+                    break;
+
+                case EVENT_BREAK:
+                    DoCastVictim(SPELL_BREAK);
+                    events.ScheduleEvent(EVENT_BREAK, 14000);
+                    break;
+
 				default:
 					break;
 				}
@@ -137,6 +182,17 @@ public:
                 DoZoneInCombat(me);
             }
         }
+
+        void JustDied(Unit* /*killer*/)
+        {
+            if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
+            {
+                bile_o_tron->RemoveAllAuras();
+                bile_o_tron->GetMotionMaster()->MoveIdle();
+            }
+
+            _JustDied();
+        }
     };
 };
 
@@ -148,7 +204,7 @@ public:
 	bool OnGossipHello(Player* pPlayer, Creature* creature)
 	{
 
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT,"We need Bile-O-Trons Help!",GOSSIP_SENDER_MAIN ,GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Help us with your Bille-O-Tron 800!", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 		pPlayer->SEND_GOSSIP_MENU(1,creature->GetGUID());
 
 		return true;
@@ -167,9 +223,6 @@ public:
                 bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_EVENT_START);
                 creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             }
-
-            if(Creature* chimaeron = ObjectAccessor::GetCreature(*creature,instance->GetData64(BOSS_CHIMAERON)))
-                chimaeron->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
 		return true;
 	}
@@ -187,7 +240,7 @@ public:
 
     struct mob_bile_o_tronAI : public ScriptedAI
     {
-        mob_bile_o_tronAI(Creature* creature) : ScriptedAI(creature), Waypoint(7), uiSystemFailureTimer(0)
+        mob_bile_o_tronAI(Creature* creature) : ScriptedAI(creature), Waypoint(7), uiSystemFailureTimer(0), activated(false)
         {
             instance = creature->GetInstanceScript();
             creature->AddUnitMovementFlag(MOVEMENTFLAG_WALKING);
@@ -196,10 +249,11 @@ public:
         InstanceScript* instance;
         uint8 Waypoint;
         uint32 uiSystemFailureTimer;
+        bool activated;
         		
         void UpdateAI(const uint32 diff)
 		{
-            if(uiSystemFailureTimer == 0)
+            if(uiSystemFailureTimer == 0 || !activated)
                 return;
 
             if(uiSystemFailureTimer <= diff)
@@ -207,6 +261,8 @@ public:
                 me->RemoveAura(SPELL_SYSTEM_FALURE);
                 me->GetMotionMaster()->MovePoint(1,BilePositions[Waypoint]);
                 uiSystemFailureTimer = 0;
+                
+                DoCast(me,SPELL_FINKLES_MIXTURE_VISUAL,true);
 
                 if(instance)
                     instance->DoCastSpellOnPlayers(SPELL_FINKLES_MIXTURE);
@@ -221,14 +277,23 @@ public:
             
             case ACTION_BILE_O_TRON_EVENT_START:
                 DoCast(me,SPELL_FINKLES_MIXTURE_VISUAL,true);
+
                 if(instance)
                     instance->DoCastSpellOnPlayers(SPELL_FINKLES_MIXTURE);
+
                 Waypoint = 8;
                 me->GetMotionMaster()->MovePoint(1,BilePositions[0]);
+                activated = true;
                 break;
 
             case ACTION_BILE_O_TRON_SYSTEM_FAILURE:
-                me->MonsterYell("System failure! brzzz",0,0);
+                
+                if(!activated)
+                    break;
+
+                if(Creature* finkle_einhorn = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_FINKLE_EINHORN)))
+                    finkle_einhorn->MonsterYell("Poor little fella.",0,0);
+
                 me->RemoveAllAuras();
                 DoCast(me,SPELL_REROUTE_POWER, true);
                 DoCast(me,SPELL_SYSTEM_FALURE, true);
@@ -240,11 +305,12 @@ public:
 
                 break;
 
-            case ACTION_RESET:
+            case ACTION_BILE_O_TRON_RESET:
                 me->RemoveAllAuras();
                 me->GetMotionMaster()->MoveTargetedHome();
                 Waypoint = 7;
                 uiSystemFailureTimer = 0;
+                activated = false;
                 break;
             }
         }

@@ -22,20 +22,14 @@
 #ifndef DEF_BLACKWING_DESCENT_H
 #define DEF_BLACKWING_DESCENT_H
 
-enum SharedSpells
-{
-    SPELL_BERSERK1                  = 26662,
-    SPELL_BERSERK2                  = 64238,
-};
-
 enum Data
 {
     //Encounters
     DATA_MAGMAW,
     DATA_OMNOTRON_DEFENSE_SYSTEM,
     DATA_MALORIAK,
-    DATA_ATRAMEDES,
     DATA_CHIMAERON,
+    DATA_ATRAMEDES,
     DATA_NEFARIAN,
 };
 
@@ -87,6 +81,9 @@ enum Creatures
 enum Gameobjects
 {
     GOB_DOOR_PRE_BOSSES             = 402092,
+    GOB_DOOR_ATRAMEDES              = 402368,
+    GOB_ONYXIA_PLATFORM             = 207834,
+    GOB_MALORIAKS_CAULDRON          = 203306,
 };
 
 #endif

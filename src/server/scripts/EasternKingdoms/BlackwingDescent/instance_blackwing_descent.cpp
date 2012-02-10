@@ -66,6 +66,9 @@ public:
 
         // Gobs
         uint64 gobPreBossDoor;
+        uint64 gobMaloriaksCauldron;
+        uint64 gobAtramedesBossDoor;
+        uint64 gobOnyxiaPlatform;
 
         void Initialize()
         {
@@ -99,6 +102,9 @@ public:
 
             // Gobs
             gobPreBossDoor = 0;
+            gobMaloriaksCauldron = 0;
+            gobAtramedesBossDoor = 0;
+            gobOnyxiaPlatform = 0;
         }
 
         bool IsEncounterInProgress() const
@@ -174,7 +180,21 @@ public:
             {
             case GOB_DOOR_PRE_BOSSES:
                 gobPreBossDoor = go->GetGUID();
-                HandleGameObject(NULL, false, go);
+                HandleGameObject(NULL, (GetData(DATA_MAGMAW)==DONE) && (GetData(DATA_OMNOTRON_DEFENSE_SYSTEM)==DONE), go);
+                break;
+
+            case GOB_MALORIAKS_CAULDRON:
+                gobMaloriaksCauldron = go->GetGUID();
+                break;
+
+            case GOB_DOOR_ATRAMEDES:
+                gobAtramedesBossDoor = go->GetGUID();
+                HandleGameObject(NULL, (GetData(DATA_MALORIAK)==DONE) && (GetData(DATA_CHIMAERON)==DONE), go);
+                break;
+
+            case GOB_ONYXIA_PLATFORM:
+                gobOnyxiaPlatform = go->GetGUID();
+                //go->SetPhaseMask(GetData(DATA_ATRAMEDES)==DONE ? 2 : PHASEMASK_NORMAL, true);
                 break;
             }
         }
@@ -232,6 +252,12 @@ public:
             case NPC_ONYXIA:
                 return uiOnyxia; 
                 break;
+
+                // Gameobjects
+            case GOB_MALORIAKS_CAULDRON:
+                return gobMaloriaksCauldron;
+                break;
+
             }
 
             return NULL;
@@ -250,11 +276,25 @@ public:
             {
                 RewardValorPoints();
                 SaveToDB();
+
+                switch(Type)
+                {
+                case DATA_MAGMAW:
+                case DATA_OMNOTRON_DEFENSE_SYSTEM:
+                    HandleGameObject(gobPreBossDoor, (GetData(DATA_MAGMAW)==DONE) && (GetData(DATA_OMNOTRON_DEFENSE_SYSTEM)==DONE));
+                    break;
+
+                case DATA_MALORIAK:
+                case DATA_CHIMAERON:
+                    HandleGameObject(gobAtramedesBossDoor, (GetData(DATA_MALORIAK)==DONE) && (GetData(DATA_CHIMAERON)==DONE));
+                    break;
+
+                /*case DATA_ATRAMEDES:
+                    if(GameObject* onyxiaPlatform = instance->GetGameObject(gobOnyxiaPlatform))
+                        onyxiaPlatform->SetPhaseMask(PHASEMASK_NORMAL, true);
+                    break;*/
+                }
             }
-            /*
-            if(Encounter[type] && Encounter[type])
-                HandleGameObject(NULL, false, insta);
-                */
         }
 
         std::string GetSaveData()
