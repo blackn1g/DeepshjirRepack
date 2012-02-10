@@ -1,10 +1,8 @@
 @echo off
 
-echo Merging Updates...
 del deepshjir_world_full.sql
-copy /A Build_base_DB\world_base.sql +..\updates\deepshjir\*sql deepshjir_world_full.sql
-
-echo Importing WOrld DB...
+cls
+echo Importing World DB...
 
 set svr=localhost
 set user=server
@@ -12,7 +10,24 @@ set pass=server
 set port=3306
 set wdb=rg_world
 
-Build_base_DB\mysql -q -s -h %svr% --user=%user% --password=%pass% --port=%port% --port=3306 deepshjir_world<  deepshjir_world_full.sql
+Build_base_DB\mysql -q -s -h %svr% --user=%user% --password=%pass% --port=%port% --port=3306 deepshjir_world<  Build_base_DB\world_base.sql
+
+echo Update DB
+
+FOR %%C IN (..\updates\skyfire\*.sql) DO (
+ECHO Skyfire Update: %%~nxC
+Build_base_DB\mysql --host=%host% --user=%user% --password=%pass% --port=%port% deepshjir_world < "%%~fC"
+)
+
+FOR %%C IN (..\updates\world\*.sql) DO (
+ECHO ArkCore Update: %%~nxC
+Build_base_DB\mysql --host=%host% --user=%user% --password=%pass% --port=%port% deepshjir_world < "%%~fC"
+)
+
+FOR %%C IN (..\updates\deepshjir\*.sql) DO (
+ECHO Deepshjir Update: %%~nxC
+Build_base_DB\mysql --host=%host% --user=%user% --password=%pass% --port=%port% deepshjir_world < "%%~fC"
+)
 
 echo Fixing errors...
 Build_base_DB\mysql -q -s -h %svr% --user=%user% --password=%pass% --port=%port% --port=3306 deepshjir_world<  db_error_fixer_extended.sql
@@ -20,4 +35,3 @@ Build_base_DB\mysql -q -s -h %svr% --user=%user% --password=%pass% --port=%port%
 echo Dumping World Database...
 
 Build_base_DB\mysqldump.exe --host=%svr% --user=%user% --password=%pass% --port=%port% --port=3306 --routines --skip-comments deepshjir_world > deepshjir_world_full.sql
-del merged.sql
