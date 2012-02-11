@@ -52,3 +52,6 @@ OR `memberGUID` NOT IN (SELECT `guid` FROM `creature`);                         
  DELETE FROM `gameobject_involvedrelation` WHERE `id` NOT IN (SELECT `entry` FROM `gameobject_template`);       -- Dinamic // 'gameobject_involvedrelation' table
  DELETE FROM `gameobject_loot_template` WHERE `entry` NOT IN (SELECT `entry` FROM `gameobject_template`);       -- Dinamic // 'gameobject_loot_template' table
  DELETE FROM `gameobject_questrelation` WHERE `id` NOT IN (SELECT `entry` FROM `gameobject_template`);          -- Dinamic
+ 
+UPDATE `version` SET `script_version`='ArkDB SmartAI + EvenAI (DeepshjirCataclysm Edition)' WHERE `core_version`='DeepshjirCataclysm Repack' AND `core_revision`='Archived' AND `db_version`='+4.0.6a_2.7.0_06-02-2012' AND `script_version`='ArkDB SmartAI + EvenAI' AND `cache_id`=0 LIMIT 1;
+UPDATE `version` SET `db_version`='+4.0.6a_2.7.0_06-02-2012 (DeepshjirCataclysm Edition)' WHERE `core_version`='DeepshjirCataclysm Repack' AND `core_revision`='Archived' AND `db_version`='+4.0.6a_2.7.0_06-02-2012' AND `script_version`='ArkDB SmartAI + EvenAI (DeepshjirCataclysm Edition)' AND `cache_id`=0 LIMIT 1;

@@ -19,6 +19,11 @@ ECHO Skyfire Update: %%~nxC
 Build_base_DB\mysql --host=%host% --user=%user% --password=%pass% --port=%port% deepshjir_world < "%%~fC"
 )
 
+FOR %%C IN (..\updates\ccdb\*.sql) DO (
+ECHO CCDB Update: %%~nxC
+Build_base_DB\mysql --host=%host% --user=%user% --password=%pass% --port=%port% deepshjir_world < "%%~fC"
+)
+
 FOR %%C IN (..\updates\world\*.sql) DO (
 ECHO ArkCore Update: %%~nxC
 Build_base_DB\mysql --host=%host% --user=%user% --password=%pass% --port=%port% deepshjir_world < "%%~fC"
@@ -35,3 +40,6 @@ Build_base_DB\mysql -q -s -h %svr% --user=%user% --password=%pass% --port=%port%
 echo Dumping World Database...
 
 Build_base_DB\mysqldump.exe --host=%svr% --user=%user% --password=%pass% --port=%port% --port=3306 --routines --skip-comments deepshjir_world > deepshjir_world_full.sql
+
+echo Done
+pause
