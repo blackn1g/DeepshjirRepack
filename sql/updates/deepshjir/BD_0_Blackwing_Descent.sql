@@ -21,7 +21,7 @@ INSERT INTO `gameobject` (`id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `
 (402368, 669, 15, 1, 53.670784, -224.593292, 94.5037, 3.130350, 0, 0, 0.999629, 0.0272188, 300, 0, 1);
 
 
-DELETE FROM `creature` WHERE `id` IN(44418, 44202, 41440, 41377) AND `map` = 669;
+DELETE FROM `creature` WHERE (`id` IN(44418, 44202, 41377)) AND (`map` = 669);
 INSERT INTO `creature` (`id`, `map`, `spawnMask`, `phaseMask`, `modelid`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `spawndist`, `currentwaypoint`, `curhealth`, `curmana`, `DeathState`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`) VALUES
 -- Finkle and Bil o tron
 (44418, 669, 15, 1, 0, 0, -110.376, 37.4967, 72.0576, 4.31101, 300, 0, 0, 77490, 0, 0, 0, 0, 0, 0),

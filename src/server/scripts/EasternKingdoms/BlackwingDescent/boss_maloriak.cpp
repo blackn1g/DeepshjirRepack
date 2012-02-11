@@ -46,7 +46,7 @@ enum Spells
     SPELL_BITING_CHILL              = 77760,
 
     SPELL_FLASH_FREEZE              = 92980,
-    SPELL_FLASH_FREEZE_SUMMON       = 77712,
+    SPELL_FLASH_FREEZE_SUMMON       = 77711,
 
     // Green Phase
     SPELL_THROW_GREEN_BOTTLE        = 77937,
@@ -73,6 +73,14 @@ enum Events
     EVENT_BERSERK,
     EVENT_REMEDY,
     EVENT_ARCANE_STORM,
+
+    // Red Phase
+    EVENT_SCORCHING_BLAST,
+    EVENT_CONSUMING_FLAMES,
+
+    // Blue Phase
+    EVENT_BITING_CHILL,
+    EVENT_FLASH_FREEZE,
 };
 
 Position const CauldronPositions[1] =
@@ -111,6 +119,7 @@ public:
         EventMap events;
         uint8 phase;
         uint8 abberationsLeft;
+        uint8 lastPhase;
         bool spellsLocked;
 
         bool wasInBlackPhase;
@@ -122,7 +131,7 @@ public:
             me->SetReactState(REACT_AGGRESSIVE);
             abberationsLeft = 15;
             withoutGreenPhase = 0;
-            wasInBlackPhase = false;
+            wasInBlackPhase = true;
             spellsLocked = false;
             UpdatePhase(PHASE_NON);
             DespawnMinions();
@@ -165,14 +174,13 @@ public:
             {
                 switch (eventId)
                 {
-
+                    // General and Phase Switching
                 case EVENT_NEW_PHASE:
-                    UpdatePhase(urand(PHASE_RED, PHASE_GREEN));
+                    UpdatePhase(urand(PHASE_RED, PHASE_BLUE));
                     spellsLocked = true;
                     break;
 
                 case EVENT_DRINK_BOTTLE:
-                    me->SetOrientation(CauldronPositions[0].GetOrientation());
 
                     switch(phase)
                     {
@@ -203,9 +211,13 @@ public:
                     switch(phase)
                     {
                     case PHASE_RED:
+                        events.ScheduleEvent(EVENT_SCORCHING_BLAST, 7000);
+                        events.ScheduleEvent(EVENT_CONSUMING_FLAMES, 3000);
                         break;
 
                     case PHASE_BLUE:
+                        events.ScheduleEvent(EVENT_BITING_CHILL, 7000);
+                        events.ScheduleEvent(EVENT_FLASH_FREEZE, 9000);
                         break;
 
                     case PHASE_GREEN:
@@ -247,6 +259,35 @@ public:
                         events.ScheduleEvent(EVENT_ARCANE_STORM, urand(27000,29000));
                     }
                     break;
+
+                    // Red Phase
+                case EVENT_SCORCHING_BLAST:
+                    DoCastAOE(SPELL_SCORCHING_BLAST);
+                    events.ScheduleEvent(EVENT_SCORCHING_BLAST, urand(15000, 17000));
+                    break;
+
+                case EVENT_CONSUMING_FLAMES:
+                    if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
+                        DoCast(target, SPELL_CONSUMING_FLAMES);
+
+                    events.ScheduleEvent(EVENT_CONSUMING_FLAMES, urand(7000, 8500));
+                    break;
+
+                    // Blue Phase
+                case EVENT_BITING_CHILL:
+                    if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
+                        DoCast(target, SPELL_BITING_CHILL);
+
+                    events.ScheduleEvent(EVENT_BITING_CHILL, urand(11000, 13000));
+                    break;
+
+                case EVENT_FLASH_FREEZE:
+                    if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
+                        target->CastSpell(target, SPELL_FLASH_FREEZE_SUMMON, true);
+
+                    events.ScheduleEvent(EVENT_FLASH_FREEZE, urand(14000, 16000));
+                    break;
+
                 default:
                     break;
                 }
@@ -267,10 +308,11 @@ public:
             if (type != POINT_MOTION_TYPE || id != 1)
                 return;
 
-            me->SetOrientation(CauldronPositions[0].GetOrientation());
-
             if(GameObject* cauldron = me->FindNearestGameObject(GOB_MALORIAKS_CAULDRON,100.f))
+            {
                 cauldron->SendCustomAnim(phase);
+                me->SetFacingToObject(cauldron);
+            }
 
             events.ScheduleEvent(EVENT_DRINK_BOTTLE, 1500);
         }
@@ -283,9 +325,13 @@ public:
             switch(phase)
             {
             case PHASE_RED:
+                events.CancelEvent(EVENT_SCORCHING_BLAST);
+                events.CancelEvent(EVENT_CONSUMING_FLAMES);
                 break;
 
             case PHASE_BLUE:
+                events.CancelEvent(EVENT_BITING_CHILL);
+                events.CancelEvent(EVENT_FLASH_FREEZE);
                 break;
 
             case PHASE_GREEN:
@@ -297,23 +343,43 @@ public:
 
             phase = newPhase;
 
-            if(me->GetMap()->IsHeroic() && !wasInBlackPhase)
+            if(phase == PHASE_NON)
+                return;
+
+            // In Heroic Mode every 2. Phase is a Black Phase
+            if((me->GetMap()->IsHeroic()) && (!wasInBlackPhase))
             {
                 phase = PHASE_BLACK;
-                wasInBlackPhase = false;
-            }
-            else
+                wasInBlackPhase = true;
+            } else
             {
                 withoutGreenPhase++;
-                wasInBlackPhase = true;
+                wasInBlackPhase = false;
+
+                if(lastPhase == phase )
+                {
+                    if(phase == PHASE_RED)
+                        phase = PHASE_BLUE;
+                    else if(phase == PHASE_BLUE)
+                        phase = PHASE_RED;
+                }
+
+                lastPhase = phase;
             }
 
-            if(phase != PHASE_NON)
+            // Every 3. Phase is a Green Phase
+            if(withoutGreenPhase >= 3)
             {
-                me->SetReactState(REACT_PASSIVE);
-                me->AttackStop();
-                me->GetMotionMaster()->MovePoint(1, CauldronPositions[0]);
-            }
+                phase = PHASE_GREEN;
+                withoutGreenPhase = 0;
+            }              
+
+            // Debug
+            phase = PHASE_BLUE;
+
+            me->SetReactState(REACT_PASSIVE);
+            me->AttackStop();
+            me->GetMotionMaster()->MovePoint(1, CauldronPositions[0]);
         }
 
         inline void DespawnMinions()
@@ -339,7 +405,38 @@ public:
     };
 };
 
+class mob_flash_freeze_maloriak : public CreatureScript
+{
+public:
+    mob_flash_freeze_maloriak() : CreatureScript("mob_flash_freeze_maloriak") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new mob_flash_freeze_maloriakAI (creature);
+    }
+
+    struct mob_flash_freeze_maloriakAI : public ScriptedAI
+    {
+        mob_flash_freeze_maloriakAI(Creature* creature) : ScriptedAI(creature) { }
+		
+        Unit* target;
+
+        void IsSummonedBy(Unit* summoner)
+        {
+            target = summoner;
+            me->AddAura(SPELL_FLASH_FREEZE, me);
+            target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_STUNNED | UNIT_FLAG_PACIFIED);
+        }
+
+        void JustDied(Unit* /*killer*/)
+        {
+            target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_STUNNED | UNIT_FLAG_PACIFIED);
+        }
+    };
+};
+
 void AddSC_boss_maloriak()
 {
     new boss_maloriak();
+    new mob_flash_freeze_maloriak();
 }
