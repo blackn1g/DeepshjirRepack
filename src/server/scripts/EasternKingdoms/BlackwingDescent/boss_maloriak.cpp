@@ -418,7 +418,7 @@ public:
     struct mob_flash_freeze_maloriakAI : public ScriptedAI
     {
         mob_flash_freeze_maloriakAI(Creature* creature) : ScriptedAI(creature) { }
-		
+
         Unit* target;
 
         void IsSummonedBy(Unit* summoner)
@@ -435,8 +435,121 @@ public:
     };
 };
 
+class spell_arcane_storm_maloriak : public SpellScriptLoader
+{
+public:
+    spell_arcane_storm_maloriak() : SpellScriptLoader("spell_arcane_storm_maloriak") { }
+
+    class spell_arcane_storm_maloriak_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_arcane_storm_maloriak_SpellScript);
+
+        bool Validate(SpellEntry const* /*spell*/)
+        {
+            return true;
+        }
+
+        void HandleDamage(SpellEffIndex effIndex)
+        {
+            PreventHitDefaultEffect(effIndex);
+            Unit* caster = GetCaster();
+            Unit* target = GetHitUnit();
+            
+            if (caster && target)
+            {
+                caster->CastSpell(target, 77908, true);
+            }
+        }
+
+        void Register()
+        {
+            OnEffect += SpellEffectFn(spell_arcane_storm_maloriak_SpellScript::HandleDamage, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_arcane_storm_maloriak_SpellScript();
+    }
+};
+
+class spell_release_abberations : public SpellScriptLoader
+{
+public:
+    spell_release_abberations() : SpellScriptLoader("spell_release_abberations") { }
+
+    class spell_release_abberationsSpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_release_abberationsSpellScript);
+
+        bool Validate(SpellEntry const * spellEntry)
+        {
+            return true;
+        }
+
+        bool Load()
+        {
+            return true;
+        }
+
+        void HandleDummy(SpellEffIndex effIndex)
+        {
+            GetCaster()->MonsterSay("test",0,0);
+        }
+
+        void Register()
+        {
+            OnEffectHitTarget += SpellEffectFn(spell_release_abberationsSpellScript::HandleDummy,EFFECT_0,SPELL_EFFECT_DUMMY);
+        }
+    };
+
+    SpellScript *GetSpellScript() const
+    {
+        return new spell_release_abberationsSpellScript();
+    }
+};
+
+class spell_release_all_abberations : public SpellScriptLoader
+{
+public:
+    spell_release_all_abberations() : SpellScriptLoader("spell_release_all_abberations") { }
+
+    class spell_release_all_abberationsSpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_release_all_abberationsSpellScript);
+
+        bool Validate(SpellEntry const * spellEntry)
+        {
+            return true;
+        }
+
+        bool Load()
+        {
+            return true;
+        }
+
+        void HandleDummy(SpellEffIndex effIndex)
+        {
+            GetCaster()->MonsterSay("test",0,0);
+        }
+
+        void Register()
+        {
+            OnEffectHitTarget += SpellEffectFn(spell_release_all_abberationsSpellScript::HandleDummy,EFFECT_0,SPELL_EFFECT_DUMMY);
+        }
+    };
+
+    SpellScript *GetSpellScript() const
+    {
+        return new spell_release_all_abberationsSpellScript();
+    }
+};
+
 void AddSC_boss_maloriak()
 {
     new boss_maloriak();
     new mob_flash_freeze_maloriak();
+    //new spell_arcane_storm_maloriak();
+    new spell_release_abberations();
+    new spell_release_all_abberations();
 }

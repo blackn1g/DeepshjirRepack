@@ -78,7 +78,7 @@ enum Creatures
     NPC_ABSOLUTE_ZERO               = 41961,
 
     // Nefarian
-    NPC_ONYXIA = 41270,
+    NPC_ONYXIA                      = 41270,
     NPC_LORD_VICTOR_NEFARIAN        = 41379,
 
     // Misc

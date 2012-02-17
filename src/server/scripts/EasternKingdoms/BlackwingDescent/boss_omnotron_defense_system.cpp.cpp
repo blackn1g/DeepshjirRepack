@@ -1,29 +1,29 @@
 /*
- * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
- *
- * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
- *
- * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
- *
- * Copyright (C) 2011 True Blood <http://www.trueblood-servers.com/>
- * By Asardial
- *
- * Copyright (C) 2012 DeepshjirCataclysm Repack
- * By Naios
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+* Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+*
+* Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+*
+* Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+*
+* Copyright (C) 2011 True Blood <http://www.trueblood-servers.com/>
+* By Asardial
+*
+* Copyright (C) 2012 DeepshjirCataclysm Repack
+* By Naios
+*
+* This program is free software; you can redistribute it and/or modify it
+* under the terms of the GNU General Public License as published by the
+* Free Software Foundation; either version 2 of the License, or (at your
+* option) any later version.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+* more details.
+*
+* You should have received a copy of the GNU General Public License along
+* with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "ScriptPCH.h"
 #include "ScriptedCreature.h"
@@ -55,6 +55,7 @@ enum Spells
     SPELL_INACTIVE=78726,
     SPELL_SHUTING_DOWN = 78746,
     SPELL_ACTIVATED = 78740,
+
     // Electron
     SPELL_LIGHTNING_CONDUCTOR = 79888,
     SPELL_ELECTRICAL_DISCHARGE = 91465,
@@ -85,28 +86,29 @@ enum Summons
 
 enum Events
 {
-    EVENT_SHUTING_DOWN_ELECTRON,
-    EVENT_SHUTING_DOWN_MAGMATRON,
-    EVENT_SHUTING_DOWN_TOXITRON,
-    EVENT_SHUTING_DOWN_ARCANOTRON,
+    // General
+    EVENT_SHUT_DOWN = 1,
+
+    // Omnotron
+    EVENT_ACTIVATE_NEXT_CONSTRUCT,
+
+    // Magmatron
+    EVENT_ACQUIRING_TARGET,
+    EVENT_INCINERATION_SECURITY_MEASURE,
+    EVENT_BARRIER,
+    // Toxitron
+    EVENT_CHEMICAL_BOMB,
+    EVENT_POISON_PROTOCOL,
+    EVENT_POISON_SOAKED_SHELL,
+    // Electron
     EVENT_LIGHTNING,
     EVENT_DISCHARGE,
     EVENT_UNSTABLE_SHIELD,
-    EVENT_CHEMICAL_BOMB,
-    EVENT_POISON_SOAKED_SHELL,
-    EVENT_POISON_PROTOCOL,
-    EVENT_GRIP_OF_DEATH,
-    EVENT_BARRIER,
-    EVENT_ACQUIRING_TARGET,
-    EVENT_FLAMETHROWER,
-    EVENT_INCINERATION_SECURITY_MEASURE,
+    // Arcanotron
+    EVENT_POWER_CONVERSION,
     EVENT_POWER_GENERATOR,
     EVENT_ARCANE_ANNIHILATOR,
-    EVENT_POWER_CONVERSION,
-    EVENT_OVERCHARGED_POWER_GENERATOR,
-    EVENT_GRIP_ZONE,
-    EVENT_ENCASING_SHADOWS,
-    EVENT_OVERCHARGED,
+
 };
 
 enum Actions
@@ -114,14 +116,18 @@ enum Actions
     ACTION_OMNOTRON_START_EVENT,
     ACTION_OMNOTRON_RESET,
     ACTION_OMNNOTRON_EVENT_FINISHED,
+
+    ACTION_TRON_ACTIVATE,
+    ACTION_EVENT_FAILED,
+    ACTION_DEACTIVATE,
 };
 
 enum DirectAccess
 {
     MAGMATRON,
-    TOXITRON,
     ELECTRON,
     ARCANOTRON,
+    TOXITRON,
 };
 
 class boss_omnotron : public CreatureScript
@@ -147,45 +153,39 @@ public:
         InstanceScript* instance;
         EventMap events;
 
-        Unit* trons[4];
+        Creature* trons[4];
+        uint8 activateTron;
         bool eventActive;
-
-
-        void Reset()
-        {
-            events.Reset();
-        }
-
-        void EnterCombat(Unit* /*who*/)
-        {
-            //events.ScheduleEvent(EVENT_TEST, urand(10000,12000));
-        }
 
         void UpdateAI(const uint32 diff)
         {
             if(!eventActive)
                 return;
 
-            return;
             events.Update(diff);
 
             while (uint32 eventId = events.ExecuteEvent())
             {
-                
-                /*switch (eventId)
+
+                switch (eventId)
                 {
 
-                case EVENT_TEST:
-                DoCastVictim(SPELL_ENFEEBLING_BLOW);
-                events.ScheduleEvent(EVENT_ENFEEBLING_BLOW, urand(19000,24000));
-                break;
+                case EVENT_ACTIVATE_NEXT_CONSTRUCT:
+
+                    if(Creature* tron = ActivateTronSelector())
+                    {
+                        me->MonsterSay("Activate Construct",0,0);
+
+                        tron->AI()->DoAction(ACTION_TRON_ACTIVATE);
+                    }
+
+                    events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 45000);
+                    break;
 
                 default:
-                break;
-                }*/
+                    break;
+                }
             }		
-
-            DoMeleeAttackIfReady();
         }
 
         void DoAction(const int32 action)
@@ -196,23 +196,23 @@ public:
                 // Start Encounter
 
                 if (instance)
-				instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, IN_PROGRESS);
+                    instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, IN_PROGRESS);
 
                 eventActive = true;
                 me->MonsterSay("Activated",0,0);
 
                 trons[MAGMATRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_MAGMATRON));
-                trons[TOXITRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_TOXITRON));
                 trons[ELECTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ELECTRON));
                 trons[ARCANOTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ARCANOTRON));
+                trons[TOXITRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_TOXITRON));
 
+                activateTron = 1;
+
+                events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 15000);
                 break;
 
             case ACTION_OMNOTRON_RESET:
                 // Resets Encounter
-
-                if (instance)
-				instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, FAIL);
 
                 if(eventActive)
                 {
@@ -220,15 +220,41 @@ public:
 
                     me->MonsterSay("Reset",0,0);
                     DespawnMinions();
+                    events.Reset();
+
+                    if (instance)
+                        instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, FAIL);
+
+                    for(uint8 i = 0; i<=3; i++)
+                        if(trons[i])
+                            trons[i]->AI()->DoAction(ACTION_EVENT_FAILED);
+
+
                 }
                 break;
 
             case ACTION_OMNNOTRON_EVENT_FINISHED:
-                if (instance)
-				instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, DONE);
 
+                me->MonsterSay("Finished",0,0);
+
+                if (instance)
+                    instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, DONE);
+
+                eventActive = false;
                 break;
             }
+        }
+
+    private:
+        Creature* ActivateTronSelector()
+        {
+            Creature* target;
+
+            target = trons[activateTron];
+
+            activateTron++;
+
+            return target;
         }
 
         inline void DespawnMinions()
@@ -240,7 +266,7 @@ public:
         void DespawnCreatures(uint32 entry)
         {
             std::list<Creature*> creatures;
-            GetCreatureListWithEntryInGrid(creatures, me, entry, 200.0f);
+            GetCreatureListWithEntryInGrid(creatures, me, entry, 100.0f);
 
             if (creatures.empty())
                 return;
@@ -251,104 +277,39 @@ public:
     };
 };
 
-struct mob_tron_dummyAI : public ScriptedAI
+class boss_trons : public CreatureScript
 {
-    mob_tron_dummyAI(Creature* creature) : ScriptedAI(creature)
-    {
-        instance = creature->GetInstanceScript();
+public:
+    boss_trons() : CreatureScript("boss_trons") { }
 
-        if(creature->GetEntry() != NPC_TOXITRON)
-            creature->AddAura(SPELL_INACTIVE,me);
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new boss_tronsAI (creature);
     }
 
-    InstanceScript* instance;
-
-    void _Reset()
+    struct boss_tronsAI : public ScriptedAI
     {
-        ResetTron();
-
-        if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
-            omnotron->GetAI()->DoAction(ACTION_OMNOTRON_RESET);
-    }
-
-    void ResetTron()
-    {
-        me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
-        me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
-
-        if(me->GetEntry() != NPC_TOXITRON) // Toxitron is using waypoints
+        boss_tronsAI(Creature* creature) : ScriptedAI(creature), activated(false)
         {
-            if(!me->HasAura(SPELL_INACTIVE))
-                DoCast(me,SPELL_SHUTING_DOWN);
+            instance = creature->GetInstanceScript();
 
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
-        }
-    }
-
-    void ActivateTron()
-    {
-        me->ClearUnitState(UNIT_STAT_STUNNED);
-        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
-    }
-
-    void DeactivateTron()
-    {
-        me->GetMotionMaster()->MoveTargetedHome();
-
-        me->AddUnitState(UNIT_STAT_STUNNED);
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
-    }
-
-    void DamageTaken(Unit* attacker, uint32 &damage)
-    {
-        switch(me->GetEntry())
-        {
-        case NPC_ARCANOTRON:
-            break;
-        case NPC_ELECTRON:
-            break;
-        case NPC_TOXITRON:
-            break;
-        case NPC_MAGMATRON:
-            break;
-        }
-    }
-};
-
-/************
-** Electron
-************/
-class boss_electron: public CreatureScript
-{
-public :
-    boss_electron() : CreatureScript("boss_electron") { }
-
-    struct boss_electronAI : public mob_tron_dummyAI 
-    {
-        boss_electronAI(Creature * creature) : mob_tron_dummyAI(creature)
-        {
-            pInstance = creature->GetInstanceScript();
+            creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+            creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
         }
 
-        InstanceScript* pInstance;
+        InstanceScript* instance;
         EventMap events;
-
-        void Reset()
-        {
-            _Reset();
-
-            events.Reset();
-        }
+        bool activated;
 
         void EnterCombat(Unit * /*who*/)
         {
-            me->MonsterYell(SAY_AGGRO, 0, 0);
-            DoCast(me, SPELL_ACTIVATED);
+            if(me->GetEntry() == NPC_TOXITRON)
+            {
+                if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
+                    omnotron->AI()->DoAction(ACTION_OMNOTRON_START_EVENT);
 
-            events.ScheduleEvent(EVENT_LIGHTNING, 10000);
-            events.ScheduleEvent(EVENT_DISCHARGE, 25000);
-            events.ScheduleEvent(EVENT_UNSTABLE_SHIELD, 11500);
-            events.ScheduleEvent(EVENT_SHUTING_DOWN_ELECTRON, 65000);
+                DoAction(ACTION_TRON_ACTIVATE);
+            }
         }
 
         void JustDied(Unit* /*Killer*/)
@@ -356,10 +317,104 @@ public :
             me->MonsterYell(SAY_DEATH, 0, 0);
         }
 
+        void JustReachedHome()
+        {
+            if(me->GetEntry() != NPC_TOXITRON || me->isInCombat())
+                DoCast(me,SPELL_SHUTING_DOWN);
+        };
+
+        void Reset()
+        {
+            if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
+                omnotron->AI()->DoAction(ACTION_OMNOTRON_RESET);
+
+            DoAction(ACTION_EVENT_FAILED);
+        };
+
+        void DoAction(const int32 action)
+        {
+            events.Reset();
+
+            switch(action)
+            {
+            case ACTION_TRON_ACTIVATE:
+                me->SetReactState(REACT_AGGRESSIVE);
+                me->RemoveAllAuras();
+                DoZoneInCombat();
+                DoCast(me, SPELL_ACTIVATED);
+                activated = true;
+
+                // Intialize Events
+                switch(me->GetEntry())
+                {
+
+                case NPC_MAGMATRON:
+                    events.ScheduleEvent(EVENT_ACQUIRING_TARGET, 15000);
+                    events.ScheduleEvent(EVENT_INCINERATION_SECURITY_MEASURE, 27000);
+                    events.ScheduleEvent(EVENT_BARRIER, 30000);
+                    break;
+
+                case NPC_TOXITRON:
+                    events.ScheduleEvent(EVENT_CHEMICAL_BOMB, 30000);
+                    events.ScheduleEvent(EVENT_POISON_PROTOCOL, 41500);
+                    events.ScheduleEvent(EVENT_POISON_SOAKED_SHELL, 65000);
+                    break;
+
+                case NPC_ELECTRON:
+                    events.ScheduleEvent(EVENT_LIGHTNING, 10000);
+                    events.ScheduleEvent(EVENT_DISCHARGE, 25000);
+                    events.ScheduleEvent(EVENT_UNSTABLE_SHIELD, 11500);
+                    break;
+
+                case NPC_ARCANOTRON:
+                    events.ScheduleEvent(EVENT_POWER_CONVERSION, 10000);
+                    events.ScheduleEvent(EVENT_POWER_GENERATOR, 30000);
+                    events.ScheduleEvent(EVENT_ARCANE_ANNIHILATOR, 8000);
+                    break;
+                }
+
+                break;
+
+            case ACTION_EVENT_FAILED:
+                if(me->HasAura(SPELL_INACTIVE))
+                    break;
+
+                me->RemoveAllAuras();
+                if(me->GetEntry() != NPC_TOXITRON)
+                { // Electron, Magmatron and Arcanotron
+                    DoAction(ACTION_DEACTIVATE);
+                }else
+                { // Toxitron
+
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
+                }
+                activated = false;
+                break;
+
+            case ACTION_DEACTIVATE:
+                me->AttackStop();
+                me->SetReactState(REACT_PASSIVE);
+                me->GetMotionMaster()->MoveTargetedHome();
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
+                activated = false;
+                break;
+            }
+        }
+
         void UpdateAI(const uint32 diff)
         {
-            if (!UpdateVictim())
+            if (!UpdateVictim() || !activated)
                 return;
+
+            if(!me->HasAura(SPELL_ACTIVATED))
+            {
+                DoCast(me, SPELL_SHUTING_DOWN);
+                me->AttackStop();
+                me->RemoveAllAuras();
+                me->GetMotionMaster()->MoveTargetedHome();
+
+                return;
+            }
 
             events.Update(diff);
 
@@ -367,6 +422,46 @@ public :
             {
                 switch(eventId)
                 {
+                    // Magmatron
+                case EVENT_ACQUIRING_TARGET:
+                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                        DoCast(pTarget, SPELL_ACQUIRING_TARGET);
+                    me->MonsterYell(SAY_REROUTING_ENERGY, 0, 0);
+                    events.ScheduleEvent(EVENT_ACQUIRING_TARGET, 15000);
+                    return;
+                case EVENT_INCINERATION_SECURITY_MEASURE:
+                    DoCastAOE(SPELL_INCINERATION_SECURITY_MEASURE);
+                    events.ScheduleEvent(EVENT_INCINERATION_SECURITY_MEASURE, 27000);
+                    return;
+                case EVENT_BARRIER:
+                    DoCast(me, SPELL_BARRIER);
+                    me->MonsterYell(SAY_SHIELD_FLAMME, 0, 0);
+                    events.ScheduleEvent(EVENT_BARRIER, 60000);
+                    return;
+
+                    // Toxitron
+                case EVENT_CHEMICAL_BOMB:
+                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                        DoCast(pTarget, SPELL_CHEMICAL_BOMB);
+                    events.ScheduleEvent(EVENT_CHEMICAL_BOMB, 30000);
+                    return;
+
+                case EVENT_POISON_PROTOCOL:
+                    for (uint32 i10 = 0; i10 < 8; ++i10)
+                        DoCast(me, SPELL_POISON_PROTOCOL+i10);
+                    if (Is25ManRaid())
+                        for (uint32 i25 = 0; i25 < 15; ++i25)
+                            DoCast(me, SPELL_POISON_PROTOCOL+i25);
+                    events.ScheduleEvent(EVENT_POISON_PROTOCOL, 41500);
+                    return;
+
+                case EVENT_POISON_SOAKED_SHELL:
+                    DoCast(me, SPELL_POISON_SOAKED_SHELL);
+                    me->MonsterYell(SAY_SHIELD_POISON, 0, 0);
+                    events.ScheduleEvent(EVENT_POISON_SOAKED_SHELL, 65000);
+                    return;
+
+                    // Electron
                 case EVENT_LIGHTNING:
                     if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                         DoCast(pTarget, SPELL_LIGHTNING_CONDUCTOR);
@@ -383,269 +478,8 @@ public :
                     me->MonsterYell(SAY_SHIELD_ELECTRON, 0, 0);
                     events.ScheduleEvent(EVENT_UNSTABLE_SHIELD, 60000);
                     return;
-                case EVENT_SHUTING_DOWN_ELECTRON:
-                    DoCast(me, SPELL_SHUTING_DOWN);
-                    me->AttackStop();
-                    me->RemoveAllAuras();
-                    events.ScheduleEvent(EVENT_SHUTING_DOWN_ELECTRON, 65000);
-                    return;
-                }
 
-            }
-            DoMeleeAttackIfReady();
-
-        }
-    };
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new boss_electronAI (pCreature);
-    }
-
-};
-
-/************
-** Magmatron
-************/
-class boss_magmatron : public CreatureScript
-{
-public :
-    boss_magmatron() : CreatureScript("boss_magmatron") { }
-
-    struct boss_magmatronAI : public mob_tron_dummyAI 
-    {
-        boss_magmatronAI(Creature * pCreature) : mob_tron_dummyAI(pCreature)
-        {
-            pInstance = pCreature->GetInstanceScript();
-        }
-
-        InstanceScript* pInstance;
-        EventMap events;
-
-        void Reset()
-        {
-            _Reset();
-
-            events.Reset();
-        }
-
-        void EnterCombat(Unit * /*who*/)
-        {
-            DoCast(me, SPELL_ACTIVATED);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SetReactState(REACT_AGGRESSIVE);
-            //NPC_ELECTRON->SetHealth(me->GetHealth());
-            EnterPhaseGround();
-        }
-
-        void EnterPhaseGround()
-        {
-            events.ScheduleEvent(EVENT_ACQUIRING_TARGET, 15000);
-            events.ScheduleEvent(EVENT_INCINERATION_SECURITY_MEASURE, 27000);
-            events.ScheduleEvent(EVENT_BARRIER, 30000);
-            events.ScheduleEvent(EVENT_SHUTING_DOWN_MAGMATRON, 65000);
-        }
-
-        void JustDied(Unit* /*Killer*/)
-        {
-            me->MonsterYell(SAY_DEATH, 0, 0);
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (!UpdateVictim())
-                return;
-
-            events.Update(diff);
-
-            while (uint32 eventId = events.ExecuteEvent())
-            {
-                switch(eventId)
-                {
-                case EVENT_ACQUIRING_TARGET:
-                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                        DoCast(pTarget, SPELL_ACQUIRING_TARGET);
-                    me->MonsterYell(SAY_REROUTING_ENERGY, 0, 0);
-                    events.ScheduleEvent(EVENT_ACQUIRING_TARGET, 15000);
-                    return;
-                case EVENT_INCINERATION_SECURITY_MEASURE:
-                    DoCastAOE(SPELL_INCINERATION_SECURITY_MEASURE);
-                    events.ScheduleEvent(EVENT_INCINERATION_SECURITY_MEASURE, 27000);
-                    return;
-                case EVENT_BARRIER:
-                    DoCast(me, SPELL_BARRIER);
-                    me->MonsterYell(SAY_SHIELD_FLAMME, 0, 0);
-                    events.ScheduleEvent(EVENT_BARRIER, 60000);
-                    return;
-                case EVENT_SHUTING_DOWN_MAGMATRON:
-                    DoCast(me, SPELL_SHUTING_DOWN);
-                    me->AttackStop();
-                    me->RemoveAllAuras();
-                    events.ScheduleEvent(EVENT_SHUTING_DOWN_MAGMATRON, 65000);
-                    return;
-                }
-
-            }
-            DoMeleeAttackIfReady();
-
-        }
-    };
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new boss_magmatronAI (pCreature);
-    }
-
-};
-
-/************
-** Toxitron
-************/
-class boss_toxitron : public CreatureScript
-{
-public :
-    boss_toxitron() : CreatureScript("boss_toxitron") { }
-
-    struct boss_toxitronAI : public mob_tron_dummyAI 
-    {
-        boss_toxitronAI(Creature * creature) : mob_tron_dummyAI(creature)
-        {
-            instance = creature->GetInstanceScript();
-        }
-
-        InstanceScript* instance;
-        EventMap events;
-
-        void Reset()
-        {
-            _Reset();
-
-            events.Reset();
-        }
-
-        void EnterCombat(Unit * /*who*/)
-        {
-            events.ScheduleEvent(EVENT_CHEMICAL_BOMB, 30000);
-            events.ScheduleEvent(EVENT_POISON_PROTOCOL, 41500);
-            events.ScheduleEvent(EVENT_POISON_SOAKED_SHELL, 65000);
-            events.ScheduleEvent(EVENT_SHUTING_DOWN_TOXITRON, 65000);
-
-            if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
-                omnotron->AI()->DoAction(ACTION_OMNOTRON_START_EVENT);
-
-            DoCast(me,SPELL_ACTIVATED);
-        }
-
-        void JustDied(Unit* /*Killer*/)
-        {
-            me->MonsterYell(SAY_DEATH, 0, 0);
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (!UpdateVictim())
-                return;
-
-            events.Update(diff);
-
-            while (uint32 eventId = events.ExecuteEvent())
-            {
-                switch(eventId)
-                {
-                case EVENT_CHEMICAL_BOMB:
-                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                        DoCast(pTarget, SPELL_CHEMICAL_BOMB);
-                    events.ScheduleEvent(EVENT_CHEMICAL_BOMB, 30000);
-                    return;
-                case EVENT_POISON_PROTOCOL:
-                    for (uint32 i10 = 0; i10 < 8; ++i10)
-                        DoCast(me, SPELL_POISON_PROTOCOL+i10);
-                    if (Is25ManRaid())
-                        for (uint32 i25 = 0; i25 < 15; ++i25)
-                            DoCast(me, SPELL_POISON_PROTOCOL+i25);
-                    events.ScheduleEvent(EVENT_POISON_PROTOCOL, 41500);
-                    return;
-                case EVENT_POISON_SOAKED_SHELL:
-                    DoCast(me, SPELL_POISON_SOAKED_SHELL);
-                    me->MonsterYell(SAY_SHIELD_POISON, 0, 0);
-                    events.ScheduleEvent(EVENT_POISON_SOAKED_SHELL, 65000);
-                    return;
-                case EVENT_SHUTING_DOWN_TOXITRON:
-                    DoCast(me, SPELL_SHUTING_DOWN);
-                    me->AttackStop();
-                    me->RemoveAllAuras();
-                    events.ScheduleEvent(EVENT_SHUTING_DOWN_TOXITRON, 65000);
-                    return;
-                }
-
-            }
-            DoMeleeAttackIfReady();
-
-        }
-    };
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new boss_toxitronAI (pCreature);
-    }
-
-};
-
-/*************
-** Arcanotron
-*************/
-class boss_arcanotron : public CreatureScript
-{
-public :
-    boss_arcanotron() : CreatureScript("boss_arcanotron") { }
-
-    struct boss_arcanotronAI : public mob_tron_dummyAI 
-    {
-        boss_arcanotronAI(Creature * pCreature) : mob_tron_dummyAI(pCreature)
-        {
-            pInstance = pCreature->GetInstanceScript();
-        }
-
-        InstanceScript* pInstance;
-        EventMap events;
-
-        void Reset()
-        {
-            _Reset();
-
-            events.Reset();
-        }
-
-        void EnterCombat(Unit * /*who*/)
-        {
-            DoCast(me, SPELL_ACTIVATED);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SetReactState(REACT_AGGRESSIVE);
-            //NPC_ELECTRON->SetHealth(me->GetHealth());
-            EnterPhaseGround();
-        }
-
-        void EnterPhaseGround()
-        {
-            events.ScheduleEvent(EVENT_POWER_CONVERSION, 10000);
-            events.ScheduleEvent(EVENT_POWER_GENERATOR, 30000);
-            events.ScheduleEvent(EVENT_ARCANE_ANNIHILATOR, 8000);
-            events.ScheduleEvent(EVENT_SHUTING_DOWN_ARCANOTRON, 65000);
-        }
-
-        void JustDied(Unit* /*Killer*/)
-        {
-            me->MonsterYell(SAY_DEATH, 0, 0);
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (!UpdateVictim())
-                return;
-
-            events.Update(diff);
-
-            while (uint32 eventId = events.ExecuteEvent())
-            {
-                switch(eventId)
-                {
+                    // Arcanotron
                 case EVENT_POWER_CONVERSION:
                     DoCast(me, SPELL_POWER_CONVERSION);
                     me->MonsterYell(SAY_SHIELD_ARCANOTRON, 0, 0);
@@ -661,29 +495,15 @@ public :
                         DoCast(target, SPELL_ARCANE_ANNIHILATOR);
                     events.ScheduleEvent(EVENT_ARCANE_ANNIHILATOR, 8000);
                     return;
-                case EVENT_SHUTING_DOWN_ARCANOTRON:
-                    DoCast(me, SPELL_SHUTING_DOWN);
-                    me->AttackStop();
-                    me->RemoveAllAuras();
-                    events.ScheduleEvent(EVENT_SHUTING_DOWN_ARCANOTRON, 65000);
-                    return;
                 }
 
             }
-            DoMeleeAttackIfReady();
 
+            DoMeleeAttackIfReady();
         }
     };
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new boss_arcanotronAI (pCreature);
-    }
-
 };
 
-/**************
-** Poison Bomb
-**************/
 class npc_poison_bomb : public CreatureScript
 {
 public:
@@ -733,9 +553,6 @@ public:
 void AddSC_boss_omnotron_defense_system()
 {
     new boss_omnotron();
-    new boss_magmatron();
-    new boss_toxitron();
-    new boss_electron();
-    new boss_arcanotron();
+    new boss_trons();
     new npc_poison_bomb();
 }
