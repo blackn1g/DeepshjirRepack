@@ -32,7 +32,7 @@ public:
     {
         boss_commander_ulthokAI(Creature* pCreature) : ScriptedAI(pCreature)
         {
-            pInstance = pCreature->GetInstanceScript();
+            instance = pCreature->GetInstanceScript();
         }
 
         uint32 DarkFissureTimer;
@@ -42,7 +42,7 @@ public:
         uint32 TargetTimer;
         Unit* SqueezeTarget;
 
-        InstanceScript *pInstance;
+        InstanceScript *instance;
 
         void Reset()
         {
@@ -54,8 +54,8 @@ public:
 
             me->GetMotionMaster()->MoveTargetedHome();
 
-            if (pInstance)
-                pInstance->SetData(DATA_COMMANDER_ULTHOK_EVENT, NOT_STARTED);
+            if (instance)
+                instance->SetData(DATA_COMMANDER_ULTHOK, NOT_STARTED);
         }
 
         void EnterCombat(Unit* /*who*/)
@@ -63,8 +63,8 @@ public:
             DoScriptText(SAY_AGGRO, me);
             DoScriptText(SAY_AGGRO_WHISP, me);
 
-            if (pInstance)
-                pInstance->SetData(DATA_COMMANDER_ULTHOK_EVENT, IN_PROGRESS);
+            if (instance)
+                instance->SetData(DATA_COMMANDER_ULTHOK, IN_PROGRESS);
         }
 
         void UpdateAI(const uint32 diff)
@@ -111,8 +111,8 @@ public:
             DoScriptText(SAY_DEATH, me);
             DoScriptText(SAY_DEATH_WHISP, me);
 
-            if (pInstance)
-                pInstance->SetData(DATA_COMMANDER_ULTHOK_EVENT, DONE);
+            if (instance)
+                instance->SetData(DATA_COMMANDER_ULTHOK, DONE);
         }
     };
 

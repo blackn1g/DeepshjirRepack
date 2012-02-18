@@ -78,16 +78,16 @@ public:
 
 	struct boss_lady_nazjarAI : public ScriptedAI
 	{
-		boss_lady_nazjarAI(Creature* pCreature) : ScriptedAI(pCreature)
+		boss_lady_nazjarAI(Creature* creature) : ScriptedAI(creature)
 		{
 			me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
 			me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
 			me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, false);
 
-			pInstance = pCreature->GetInstanceScript();
+			instance = creature->GetInstanceScript();
 		}
 
-		InstanceScript *pInstance;
+		InstanceScript *instance;
 
 		uint8 Phase;
 		bool Phased;
@@ -107,8 +107,11 @@ public:
 
 			me->GetMotionMaster()->MoveTargetedHome();
 
-			if (pInstance)
-				pInstance->SetData(DATA_LADY_NAZJAR_EVENT, NOT_STARTED);
+			if (instance)
+				instance->SetData(DATA_LADY_NAZJAR, NOT_STARTED);
+
+            /*if(GameObject* door = me->FindNearestGameObject(GO_LADY_NAZJAR_DOOR,150.0f))
+                instance->HandleGameObject(0,true, door);*/
 		}
 
 		void SummonedCreatureDespawn(Creature* summon)
@@ -138,8 +141,7 @@ public:
 			{
 			case NPC_SUMMONED_WITCH:
 			case NPC_SUMMONED_GUARD:
-				summon->AI()->DoZoneInCombat();
-				summon->GetMotionMaster()->MoveChase(SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true));
+				summon->AI()->DoZoneInCombat(summon);
 				break;
 			case NPC_SUMMONED_WATERSPOUT:
 			case NPC_SUMMONED_WATERSPOUT_HC:
@@ -160,8 +162,11 @@ public:
 
 			DoScriptText(SAY_AGGRO, me);
 
-			if (pInstance)
-				pInstance->SetData(DATA_LADY_NAZJAR_EVENT, IN_PROGRESS);
+			if (instance)
+				instance->SetData(DATA_LADY_NAZJAR, IN_PROGRESS);
+
+            /*if(GameObject* door = me->FindNearestGameObject(GO_LADY_NAZJAR_DOOR,150.0f))
+                instance->HandleGameObject(0,false, door);*/
 
 			events.ScheduleEvent(EVENT_GEYSER, 11000);
 			events.ScheduleEvent(EVENT_FUNGAL_SPORES, urand(3000,10000));
@@ -170,13 +175,12 @@ public:
 
 		void JustDied(Unit* /*pKiller*/)
 		{
-			//me->SummonCreature(BOSS_COMMANDER_ULTHOK, 59.185f, 802.251f, 805.730f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60480000);
 			DoScriptText(SAY_DEATH, me);
 
 			DespawnMinions();
 
-			if (pInstance)
-				pInstance->SetData(DATA_LADY_NAZJAR_EVENT, DONE);
+			if (instance)
+				instance->SetData(DATA_LADY_NAZJAR, DONE);
 		}
 
 		void UpdateAI(const uint32 diff)
@@ -284,7 +288,7 @@ public:
 		void DespawnCreatures(uint32 entry)
 		{
 			std::list<Creature*> creatures;
-			GetCreatureListWithEntryInGrid(creatures, me, entry, 1000.0f);
+			GetCreatureListWithEntryInGrid(creatures, me, entry, 100.0f);
 
 			if (creatures.empty())
 				return;
@@ -294,9 +298,9 @@ public:
 		}
 	};
 
-	CreatureAI* GetAI(Creature *pCreature) const
+	CreatureAI* GetAI(Creature *creature) const
 	{
-		return new boss_lady_nazjarAI (pCreature);
+		return new boss_lady_nazjarAI (creature);
 	}
 };
 
@@ -307,7 +311,7 @@ public:
 
 	struct mob_waterspoutAI : public ScriptedAI
 	{
-		mob_waterspoutAI(Creature* pCreature) : ScriptedAI(pCreature)
+		mob_waterspoutAI(Creature* creature) : ScriptedAI(creature)
 		{
 			me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
 			me->SetReactState(REACT_PASSIVE);
@@ -329,9 +333,9 @@ public:
 		}
 	};
 
-	CreatureAI* GetAI(Creature *pCreature) const
+	CreatureAI* GetAI(Creature *creature) const
 	{
-		return new mob_waterspoutAI (pCreature);
+		return new mob_waterspoutAI (creature);
 	}
 };
 

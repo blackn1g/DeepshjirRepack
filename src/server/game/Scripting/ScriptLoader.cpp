@@ -637,6 +637,7 @@ void AddSC_boss_drahga_shadowburner();
 void AddSC_boss_erudax();
 void AddSC_instance_grim_batol();
 void AddSC_instance_throne_of_the_tides();	//Throne of the Tides
+void AddSC_throne_of_the_tides();
 void AddSC_boss_lady_nazjar();
 void AddSC_boss_erunak_stonespeaker();
 void AddSC_boss_commander_ulthok();
@@ -1322,6 +1323,7 @@ void AddNorthrendScripts() {
     AddSC_boss_erudax();
     AddSC_instance_grim_batol();
 	AddSC_instance_throne_of_the_tides(); //Throne of the Tides
+	AddSC_throne_of_the_tides();
 	AddSC_boss_lady_nazjar();
 	AddSC_boss_erunak_stonespeaker();
 	AddSC_boss_commander_ulthok();

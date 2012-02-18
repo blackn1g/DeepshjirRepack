@@ -80,7 +80,7 @@ public:
             phased = false;
 
             if (pInstance)
-                pInstance->SetData(DATA_ERUNAK_STONESPEAKER_EVENT, NOT_STARTED);
+                pInstance->SetData(DATA_MINDEBENDER_GHURSHA, NOT_STARTED);
         }
 
         void EnterCombat(Unit* /*who*/)
@@ -93,7 +93,7 @@ public:
             MagmaSplashTimer = 17000;
 
             if (pInstance)
-                pInstance->SetData(DATA_ERUNAK_STONESPEAKER_EVENT, IN_PROGRESS);
+                pInstance->SetData(DATA_MINDEBENDER_GHURSHA, IN_PROGRESS);
         }
 
         void JustSummoned(Creature* pSummon)
@@ -228,7 +228,7 @@ public:
             me->DespawnOrUnsummon();
 
             if (pInstance)
-                pInstance->SetData(DATA_ERUNAK_STONESPEAKER_EVENT, NOT_STARTED);
+                pInstance->SetData(DATA_MINDEBENDER_GHURSHA, NOT_STARTED);
         }
 
         void EnterCombat(Unit* /*who*/)
@@ -418,7 +418,7 @@ public:
             pErunak->setFaction(35);
 
             if (pInstance)
-                pInstance->SetData(DATA_ERUNAK_STONESPEAKER_EVENT, DONE);
+                pInstance->SetData(DATA_MINDEBENDER_GHURSHA, DONE);
         }
     };
 

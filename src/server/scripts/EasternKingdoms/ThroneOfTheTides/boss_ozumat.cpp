@@ -291,7 +291,7 @@ public:
         {
             pInstance = c->GetInstanceScript();
             Ozumat = me;
-            me->setFaction(14);
+			me->SetReactState(REACT_PASSIVE);
         }
 
         InstanceScript* pInstance;
