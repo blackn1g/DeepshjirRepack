@@ -1,4 +1,4 @@
-build/
+build*/
 .directory
 .mailmap
 *.orig
@@ -8,6 +8,9 @@ build/
 *.kdev*
 *.bak
 *.patch
-sql/world_builder/Build_base_DB/world_base.sql
-sql/world_builder/deepshjir_world_full.sql
 Pull.bat
+*.diff
+*.REMOTE.*
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
