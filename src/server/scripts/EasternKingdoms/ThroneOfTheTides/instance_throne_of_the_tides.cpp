@@ -53,7 +53,7 @@ public:
             uiNeptulon = 0;
 
             uiCorales = 0,
-            uiLadyNazjarDoor = 0;
+                uiLadyNazjarDoor = 0;
             uiCommanderUlthokDoor = 0;
             uiMindebenderGhurshaDoor = 0;
             uiOzumatDoor = 0;
@@ -67,7 +67,7 @@ public:
             return false;
         }
 
-        void OnCreatureCreate(Creature* creature, bool /*add*/)
+        void OnCreatureCreate(Creature* creature, bool add)
         {
             Map::PlayerList const &players = instance->GetPlayers();
             uint32 TeamInInstance = 0;
@@ -110,7 +110,7 @@ public:
             }
         }
 
-        void OnGameObjectCreate(GameObject* go, bool /*add*/)
+        void OnGameObjectCreate(GameObject* go, bool add)
         {
             switch(go->GetEntry())
             {
@@ -122,19 +122,19 @@ public:
                 break;
             case GO_LADY_NAZJAR_DOOR:
                 uiLadyNazjarDoor = go->GetGUID();
-                HandleGameObject(uiLadyNazjarDoor, false);
+                HandleGameObject(uiLadyNazjarDoor, true);
                 break;
             case GO_COMMANDER_ULTHOK_DOOR:
                 uiCommanderUlthokDoor = go->GetGUID();
-                HandleGameObject(0, (encounter[0] == DONE && encounter[1] == DONE) || encounter[0] == NOT_STARTED, go);
+                HandleGameObject(uiCommanderUlthokDoor, true);
                 break;
             case GO_ERUNAK_STONESPEAKER_DOOR:
                 uiMindebenderGhurshaDoor = go->GetGUID();
-                HandleGameObject(0, encounter[1] == DONE, go);
+                HandleGameObject(0, encounter[DATA_COMMANDER_ULTHOK] == DONE, go);
                 break;
             case GO_OZUMAT_DOOR:
                 uiOzumatDoor = go->GetGUID();
-                HandleGameObject(0, encounter[2] == DONE, go);
+                HandleGameObject(0, encounter[DATA_MINDEBENDER_GHURSHA] == DONE, go);
                 break;
             }
         }
@@ -149,9 +149,13 @@ public:
                 if (data == DONE)
                 {
                     if(Creature* commanderUlthok = instance->GetCreature(uiCommanderUlthok))
+                    {
                         commanderUlthok->SetPhaseMask(PHASEMASK_NORMAL, true);
+                        commanderUlthok->CastSpell(commanderUlthok, SPELL_ULTHOK_INTRO, true);
+                    }
 
                     HandleGameObject(uiLadyNazjarDoor, true);
+                    HandleGameObject(uiCommanderUlthokDoor, false);
 
                     if(GameObject* corales = instance->GetGameObject(uiCorales))
                         corales->SetPhaseMask(2,true);
@@ -165,7 +169,6 @@ public:
                         commanderUlthok->SetPhaseMask(2, true);
 
                     HandleGameObject(uiLadyNazjarDoor, true);
-                    HandleGameObject(uiCommanderUlthokDoor, false);
 
                     if(GameObject* corales = instance->GetGameObject(uiCorales))
                         corales->SetPhaseMask(1,true);
@@ -174,17 +177,34 @@ public:
             case DATA_COMMANDER_ULTHOK:
                 if (data == DONE)
                 {
+                    HandleGameObject(uiLadyNazjarDoor, true);
                     HandleGameObject(uiCommanderUlthokDoor, true);
                     HandleGameObject(uiMindebenderGhurshaDoor, true);
+
                 }else if (data == IN_PROGRESS)
                 {
+                    HandleGameObject(uiCommanderUlthokDoor, false);
+                    HandleGameObject(uiLadyNazjarDoor, false);
+
+                }else if (encounter[DATA_LADY_NAZJAR] == DONE)
+                {
+                    HandleGameObject(uiLadyNazjarDoor, true);
+                    HandleGameObject(uiCommanderUlthokDoor, true);
+                }
+
                 break;
             case DATA_MINDEBENDER_GHURSHA:
                 if(data == DONE)
                 {
                     HandleGameObject(uiMindebenderGhurshaDoor, true);
                     HandleGameObject(uiOzumatDoor, true);
-                }
+                }else if (data == IN_PROGRESS)
+                    HandleGameObject(uiMindebenderGhurshaDoor, false);
+                else if (encounter[DATA_COMMANDER_ULTHOK] == DONE)
+                    HandleGameObject(uiCommanderUlthokDoor, true);
+                else
+                    HandleGameObject(uiCommanderUlthokDoor, false);
+
                 break;
             case DATA_OZUMAT:
                 break;

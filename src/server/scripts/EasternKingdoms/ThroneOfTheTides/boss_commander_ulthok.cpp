@@ -11,9 +11,18 @@ EndScriptData */
 #define SPELL_DARK_FISSURE          DUNGEON_MODE(76047,96311)
 #define SPELL_DARK_FISSURE_AURA     DUNGEON_MODE(76066,91371)
 #define SPELL_SQUEEZE               DUNGEON_MODE(76026,95463)
-#define SPELL_ENRAGE                76100
-#define SPELL_CURSE_OF_FATIGUE      76094
-#define SPELL_PULL_TARGET           67357 // HACK!!
+
+enum Spells
+{
+    SPELL_ENRAGE                = 76100,
+    SPELL_CURSE_OF_FATIGUE      = 76094,
+    SPELL_PULL_TARGET           = 67357,
+    SPELL_DARK_FISSURE_GROW     = 91375,
+};
+
+// 76066 - Visual
+// 76085 ?
+// 91371 - Visual mit wachstum
 
 enum Yells
 {
@@ -30,9 +39,9 @@ public:
 
     struct boss_commander_ulthokAI : public ScriptedAI
     {
-        boss_commander_ulthokAI(Creature* pCreature) : ScriptedAI(pCreature)
+        boss_commander_ulthokAI(Creature* creature) : ScriptedAI(creature)
         {
-            instance = pCreature->GetInstanceScript();
+            instance = creature->GetInstanceScript();
         }
 
         uint32 DarkFissureTimer;
@@ -43,9 +52,12 @@ public:
         Unit* SqueezeTarget;
 
         InstanceScript *instance;
+        Vehicle* vehicle;
 
         void Reset()
         {
+            DespawnDarkFissures();
+
             DarkFissureTimer = 22500;
             EnrageTimer = urand(12000,18000);
             SqueezeTimer = 25500;
@@ -60,6 +72,8 @@ public:
 
         void EnterCombat(Unit* /*who*/)
         {
+            me->RemoveAllAuras();
+
             DoScriptText(SAY_AGGRO, me);
             DoScriptText(SAY_AGGRO_WHISP, me);
 
@@ -94,6 +108,7 @@ public:
             {
                 DoCast(SqueezeTarget, SPELL_PULL_TARGET, true);
                 DoCast(SqueezeTarget, SPELL_SQUEEZE, true);
+
                 SqueezeTimer = 22500;
             } else SqueezeTimer -= diff;
 
@@ -108,12 +123,27 @@ public:
 
         void JustDied(Unit* /*pKiller*/)
         {
+            DespawnDarkFissures();
+
             DoScriptText(SAY_DEATH, me);
             DoScriptText(SAY_DEATH_WHISP, me);
 
             if (instance)
                 instance->SetData(DATA_COMMANDER_ULTHOK, DONE);
         }
+
+    private:
+        void DespawnDarkFissures()
+		{
+			std::list<Creature*> creatures;
+			GetCreatureListWithEntryInGrid(creatures, me, NPC_DARK_FISSURE, 150.0f);
+
+			if (creatures.empty())
+				return;
+
+			for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
+				(*iter)->DespawnOrUnsummon();
+		}
     };
 
     CreatureAI* GetAI(Creature *pCreature) const

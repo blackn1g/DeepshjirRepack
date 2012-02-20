@@ -25,11 +25,16 @@
 #include "ScriptPCH.h"
 #include "throne_of_the_tides.h"
 
-Position const Eventpositions[] =
-{{-126.425f, 816.384f, 796.188f, 3.007515f}, // Invader
-{-126.516f, 797.748f, 797.104f, 2.57005f},
-{-125.660f, 786.393f, 796.736f, 3.113f},
-{-126.098f, 806.249f, 797.098f, 3.55966f}};
+Position const EventPositions[] =
+{{-139.756f, 802.663f, 796.641f, 3.136672f}, // Start Point
+{-132.084763f, 798.554138f, 796.976257f, 3.155597f}, // Invader Spawnpoints
+{-132.03f, 806.99f, 797.f, 3.06f},
+{-103.577f, 806.394f, 796.965f, 3.06048f},
+{-72.4102f, 798.265f, 796.97f, 3.12723f}, // Spiritmender Spawnpoints
+{-72.2161f, 806.563f, 796.966f, 3.09581f},
+{-104.031f, 798.42f, 796.957f, 3.14216f},
+{-45.626f, 802.385f, 797.117f, 3.1178f}, // Murloc Spawnposition
+{23.623f, 802.433f, 806.317f, 6.254f}}; // Naz'jar despawn Point
 
 class mob_lady_nazjar_event : public CreatureScript
 {
@@ -50,16 +55,19 @@ public:
 
         InstanceScript* instance;
 
-        uint8 eventProgress;
+        bool eventProgress;
         uint8 nextStep;
         uint32 timer;
 
         void Reset()
         {
+            if(instance->GetData(DATA_LADY_NAZJAR) == DONE)
+                me->ForcedDespawn(0);
+
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             me->SetReactState(REACT_PASSIVE);
 
-            eventProgress = 0;
+            eventProgress = false;
             nextStep = 0;
 
             timer = 1000;
@@ -70,72 +78,88 @@ public:
             if(!instance)
                 return;
 
-            if(eventProgress != 0 && !me->isInCombat())
-                Reset();
-
-            if (eventProgress == 0)
+            if (!eventProgress)
             {
                 if (timer <= diff)
                 {
                     if (Player* target = me->FindNearestPlayer(143.0f, true))
                     {
-                        if (!target->isGameMaster() && target->GetDistance(me) < 143)
+                        if (!target->isGameMaster() /*&& target->GetDistance(me) < 143 */&& target->GetDistance(EventPositions[0]) < 15.f)
                         {
-                            me->MonsterYell("Armies of the depths, wash over our enemies as a tide of death!",0,0);
-                            DoZoneInCombat(me);
+                            if(GameObject* door = me->FindNearestGameObject(GO_COMMANDER_ULTHOK_DOOR, 30.0f))
+                                instance->HandleGameObject(0, false, door);
 
-                            eventProgress = 0;
-                            ProcessStep();
+                            me->MonsterYell("Armies of the depths, wash over our enemies as a tide of death!",0,0);
+
+                            eventProgress = true;
+
+                            for(uint8 i = 1; i <= 3; i++)
+                            {
+                                if(Creature* invader = me->SummonCreature(NPC_NAZJAR_INVADER,EventPositions[i],TEMPSUMMON_MANUAL_DESPAWN))
+                                    if(i != 3)
+                                        invader->AI()->DoZoneInCombat(invader);
+                            }
+
+                            for(uint8 i = 4; i <= 6; i++)
+                            {
+                                if(Creature* spiritmender = me->SummonCreature(NPC_NAZJAR_SPIRITMENDER,EventPositions[i],TEMPSUMMON_MANUAL_DESPAWN))
+                                    spiritmender->AI()->DoZoneInCombat(spiritmender);
+                            }
+
+                            nextStep = 4;
                         }
                     }
 
-                    if (eventProgress == 0)
-                        timer = 1000;
+                    timer = 1000;
+
+                } else timer -= diff;
+
+            }else
+            {
+                if (timer <= diff)
+                {
+                    if(Player* target = me->FindNearestPlayer(143.0f, true))
+                        if (!target->isGameMaster() && target->GetDistance(me) < 143)
+                        {
+                            for(uint8 i = 0; i <= 6; i++)
+                            {
+                                if(Creature* murloc = me->SummonCreature(NPC_DEEP_MURLOC_DRUDGE, EventPositions[7], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000))
+                                {
+                                    murloc->AI()->DoZoneInCombat(murloc);
+                                    murloc->GetMotionMaster()->MovePoint(0, EventPositions[0]);
+                                }
+                            }
+                        }
+
+                        timer = 16000;
 
                 } else timer -= diff;
             }
         }
 
-        void SummonedCreatureDespawn(Creature* summon)
+        void SummonedCreatureDies(Creature* summon, Unit* /*killer*/)
         {
-            if(nextStep > 0)
-            {
+            if(summon->GetEntry() != NPC_DEEP_MURLOC_DRUDGE)
                 nextStep--;
 
-                if(nextStep == 0 && eventProgress != 0)
-                    ProcessStep();
-            }
-        }
-
-        void JustSummoned(Creature* summon)
-        {
-            if(eventProgress != 0)
-                nextStep++;
-        }
-
-    private:
-        void ProcessStep()
-        {
-            eventProgress++;
-
-            switch(eventProgress)
+            if(nextStep == 0)
             {
-            case 1:
-                for(uint8 i = 0; i <= 2; i+= 2)
-                {
-                    if(Creature* invader = me->SummonCreature(NPC_NAZJAR_INVADER,Eventpositions[i],TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT))
-                    {
-                        invader->GetMotionMaster()->MoveJump(Eventpositions[i+1].GetPositionX(),Eventpositions[i+1].GetPositionY(),Eventpositions[i+1].GetPositionZ(),.3f,.3f);
-                    }
-                }
+                me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
 
-                break;
+                if(GameObject* door = me->FindNearestGameObject(GO_COMMANDER_ULTHOK_DOOR, 30.0f))
+                    instance->HandleGameObject(0, true, door);
 
-            case 2:
-
-                break;
-
+                me->MonsterYell("Meddlesome gnats! You think us defeated so easily?",0,0);
+                me->GetMotionMaster()->MovePoint(0, EventPositions[8]);
             }
+        }
+
+        void MovementInform(uint32 type, uint32 id)
+        {
+            if (type != POINT_MOTION_TYPE || id != 0)
+                return;
+
+            me->DisappearAndDie();
         }
     };
 };
