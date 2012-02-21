@@ -1,25 +1,26 @@
 /*
-* Copyright (C) 2011 ArkCORE <http://www.arkania.net/>
-*
-* This program is free software; you can redistribute it and/or modify it
-* under the terms of the GNU General Public License as published by the
-* Free Software Foundation; either version 2 of the License, or (at your
-* option) any later version.
-*
-* This program is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-* FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-* more details.
-*
-* You should have received a copy of the GNU General Public License along
-* with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/**********
-* Script rewritten by Naios
-* Base Script by unkonwn
-* Script Complete 20% (or less)
-**********/
+ * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+ *
+ * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+ *
+ * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ *
+ * Copyright (C) 2012 DeepshjirCataclysm Repack
+ * By Naios
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "ScriptPCH.h"
 #include "throne_of_the_tides.h"
@@ -110,7 +111,6 @@ public:
         uint8 Phase;
         bool Phased;
         uint8 SpawnCount;
-        uint32 eventStop;
 
         EventMap events;
 
@@ -196,6 +196,12 @@ public:
 
             HandleCombatVisual(false);
             DespawnMinions();
+            
+            Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
+
+            if (!PlayerList.isEmpty())
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                        i->getSource()->SendCinematicStart(169);
 
             if (instance)
                 instance->SetData(DATA_LADY_NAZJAR, DONE);
@@ -208,14 +214,12 @@ public:
 
             if (SpawnCount == 0)
             {
-                events.DelayEvents(eventStop-diff);
-                LeavePhaseClearDreames();
+                LeaveClearDreamesPhase();
             }
 
             if ((me->HealthBelowPct(67) && Phase == PHASE_NORMAL_ONE) || (me->HealthBelowPct(34) && Phase == PHASE_NORMAL_TWO))
             {
-                eventStop = diff;
-                EnterPhaseClearDreames();
+                EnterClearDreamesPhase();
             }
 
             if (me->HasUnitState(UNIT_STAT_CASTING))
@@ -234,7 +238,7 @@ public:
                         if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
                             DoCast(target, SPELL_SUMMON_GEYSER);
 
-                        events.ScheduleEvent(EVENT_GEYSER_ERRUPT, 2500);
+                        events.ScheduleEvent(EVENT_GEYSER_ERRUPT, 3500);
                         events.ScheduleEvent(EVENT_GEYSER, urand(14000,17000));
                         break;
                     case EVENT_GEYSER_ERRUPT:
@@ -259,7 +263,7 @@ public:
         }
 
     private:
-        inline void EnterPhaseClearDreames()
+        inline void EnterClearDreamesPhase()
         {
             DoScriptText(SAY_66_PRECENT, me);
 
@@ -279,7 +283,7 @@ public:
 
         }
 
-        inline void LeavePhaseClearDreames()
+        inline void LeaveClearDreamesPhase()
         {	
             me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, false);
             Phase++;
@@ -301,14 +305,6 @@ public:
             DespawnCreatures(NPC_SUMMONED_WATERSPOUT);
             DespawnCreatures(NPC_SUMMONED_GEYSER);
         }
-
-        /*inline Position GetWatersproudPosition(Position* pos)
-        {
-        int x = pos->GetPo
-        int y
-        int z = pos->;
-
-        }*/
 
         void DespawnCreatures(uint32 entry)
         {

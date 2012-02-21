@@ -34,7 +34,12 @@ Position const EventPositions[] =
 {-72.2161f, 806.563f, 796.966f, 3.09581f},
 {-104.031f, 798.42f, 796.957f, 3.14216f},
 {-45.626f, 802.385f, 797.117f, 3.1178f}, // Murloc Spawnposition
-{23.623f, 802.433f, 806.317f, 6.254f}}; // Naz'jar despawn Point
+{23.623f, 802.433f, 806.317f, 6.254f}, // Naz'jar despawn Point
+{32.1444f, 802.431f, 806.317f, 3.11295f}, // 2. Event Part Tempest Witch
+{33.6948f, 805.856f, 806.317f, 3.06583f}, // Invader
+{33.4031f, 799.003f, 806.317f, 3.12473f},
+{35.352394f, 809.527f, 806.317f, 3.05f}, // Spiritmender
+{34.6015f, 795.f, 806.317f, 3.081633f}};
 
 class mob_lady_nazjar_event : public CreatureScript
 {
@@ -84,7 +89,7 @@ public:
                 {
                     if (Player* target = me->FindNearestPlayer(143.0f, true))
                     {
-                        if (!target->isGameMaster() /*&& target->GetDistance(me) < 143 */&& target->GetDistance(EventPositions[0]) < 15.f)
+                        if (!target->isGameMaster() && target->GetDistance(EventPositions[0]) < 15.f)
                         {
                             if(GameObject* door = me->FindNearestGameObject(GO_COMMANDER_ULTHOK_DOOR, 30.0f))
                                 instance->HandleGameObject(0, false, door);
@@ -158,6 +163,14 @@ public:
         {
             if (type != POINT_MOTION_TYPE || id != 0)
                 return;
+
+            me->SummonCreature(NPC_TEMPEST_WITCH,EventPositions[9], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 90000);
+
+            for(uint8 i = 10; i <= 11; i++)
+                me->SummonCreature(NPC_NAZJAR_INVADER,EventPositions[i], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 90000);
+
+            for(uint8 i = 12; i <= 13; i++)
+                me->SummonCreature(NPC_NAZJAR_SPIRITMENDER, EventPositions[i], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 90000);
 
             me->DisappearAndDie();
         }
