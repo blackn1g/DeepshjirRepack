@@ -7672,6 +7672,9 @@ void Spell::EffectCharge(SpellEffIndex /*effIndex*/)
     if (!IsPositiveSpell(m_spellInfo->Id)
             && m_caster->GetTypeId() == TYPEID_PLAYER) m_caster->Attack(target,
             true);
+            
+    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+            static_cast<Player*>(m_caster)->m_anti_BeginFallZ=INVALID_HEIGHT;
 }
 
 void Spell::EffectChargeDest(SpellEffIndex /*effIndex*/)

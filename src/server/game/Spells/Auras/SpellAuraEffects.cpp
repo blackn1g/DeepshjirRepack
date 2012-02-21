@@ -4323,10 +4323,16 @@ void AuraEffect::HandleAuraAllowFlight(AuraApplication const *aurApp,
     if (Player *plr = target->m_movedPlayer) {
         // allow flying
         WorldPacket data;
-        if (apply)
-            data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12, true);
-        else
-            data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12, true);
+        {
+            static_cast<Player*>(target)->SetCanFly(true);
+            static_cast<Player*>(target)->m_anti_BeginFallZ=INVALID_HEIGHT;
+             data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
+        }
+         else
+        {
+             data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12);
+            static_cast<Player*>(target)->SetCanFly(false);
+        }
         data.append(target->GetPackGUID());
         data << uint32(0); // unk
         plr->SendDirectMessage(&data);
@@ -4371,7 +4377,11 @@ void AuraEffect::HandleAuraFeatherFall(AuraApplication const *aurApp,
 
     WorldPacket data;
     if (apply)
+    {
         data.Initialize(SMSG_MOVE_FEATHER_FALL, 8 + 4, true);
+        if (target->GetTypeId() == TYPEID_PLAYER)
+            static_cast<Player*>(target)->m_anti_BeginFallZ=INVALID_HEIGHT;
+    }
     else
         data.Initialize(SMSG_MOVE_NORMAL_FALL, 8 + 4, true);
     data.append(target->GetPackGUID());
@@ -4735,9 +4745,15 @@ void AuraEffect::HandleAuraModIncreaseFlightSpeed(AuraApplication const *aurApp,
             if (Player *plr = target->m_movedPlayer) {
                 WorldPacket data;
                 if (apply)
-                    data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12, true);
+                {
+                    static_cast<Player*>(target)->SetCanFly(true);
+                    data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
+                }
                 else
-                    data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12, true);
+                {
+                    data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12);
+                    static_cast<Player*>(target)->SetCanFly(false);
+                }
                 data.append(plr->GetPackGUID());
                 data << uint32(0); // unknown
                 plr->SendDirectMessage(&data);
