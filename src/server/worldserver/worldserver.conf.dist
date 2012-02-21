@@ -3136,12 +3136,12 @@ OutdoorPvP.Wintergrasp.Antifarm.Def = 15
 ###################################################################################################
 
 Anticheat.Movement.Enable = 1
-Anticheat.Movement.AlarmCount = 5
+Anticheat.Movement.AlarmCount = 3
 Anticheat.Movement.AlarmTime = 5000
 Anticheat.Movement.Kill = 0
-Anticheat.Movement.Kick = 0
-Anticheat.Movement.BanType = 0
-Anticheat.Movement.BanTime = "1m"
+Anticheat.Movement.Kick = 1
+Anticheat.Movement.BanType = 1
+Anticheat.Movement.BanTime = "20m"
 Anticheat.Movement.MaxXYT = 0.04
 Anticheat.Movement.IgnoreSecAfterTeleport = 10
 Anticheat.Movement.GmLevel = 0

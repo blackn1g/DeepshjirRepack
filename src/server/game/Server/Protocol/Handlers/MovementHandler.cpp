@@ -116,8 +116,7 @@ return Ret;
 }
 #endif // __ANTI_DEBUG__
 
-bool Player::Anti__CheatOccurred(const char* Reason,float Speed,uint16 Op,
-                            float Val1,uint32 Val2,const MovementInfo* MvInfo, bool ForceReport)
+bool Player::Anti__CheatOccurred(const char* Reason,float Speed,uint16 Op, float Val1,uint32 Val2,const MovementInfo* MvInfo, bool ForceReport)
 {
 if(!Reason)
 {
@@ -147,12 +146,19 @@ uint32 t_guid = 0;
 uint32 flags = 0;
 
 MapEntry const* mapEntry = sMapStore.LookupEntry(GetMapId());
-AreaTableEntry const* zoneEntry = GetAreaEntryByAreaID(zone_id);
-AreaTableEntry const* areaEntry = GetAreaEntryByAreaID(area_id);
+// ZoneTableEntry const* zoneEntry = "not supported";
+AreaTableEntry const* areaEntry = sAreaStore.LookupEntry(GetAreaId());
 
+
+std::string mapName = GetMap()->GetMapName();
+std::string zoneName = "not supported yet";
+std::string areaName = areaEntry->area_name;
+
+/*
 std::string mapName(mapEntry ? mapEntry->name[GetSession()->GetSessionDbcLocale()] : "<unknown>");
 std::string zoneName(zoneEntry ? zoneEntry->area_name[GetSession()->GetSessionDbcLocale()] : "<unknown>");
 std::string areaName(areaEntry ? areaEntry->area_name[GetSession()->GetSessionDbcLocale()] : "<unknown>");
+*/
 
 CharacterDatabase.EscapeString(mapName);
 CharacterDatabase.EscapeString(zoneName);
@@ -211,30 +217,57 @@ else
                                t_guid,flags,fallTime);
 }
 
+
+std::string str = "|cFFFFFC00[AC]|cFF00FFFF[|cFF60FF00" + std::string(GetName()) + "|cFF00FFFF] Cheater found!";
+WorldPacket data(SMSG_NOTIFICATION, (str.size()+1));
+data << str;
+sWorld->SendGlobalGMMessage(&data);
+
 if(sWorld->GetMvAnticheatKill() && isAlive())
     DealDamage(this, GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
 if(sWorld->GetMvAnticheatKick())
-    GetSession()->KickPlayer();
-
-if(sWorld->GetMvAnticheatBan() & 1)
-    sWorld->BanAccount(BAN_CHARACTER,Player,sWorld->GetMvAnticheatBanTime(),"Cheat","Anticheat");
-
-if(sWorld->GetMvAnticheatBan() & 2)
 {
-    QueryResult result = LoginDatabase.PQuery("SELECT last_ip FROM account WHERE id=%u", Acc);
-    if(result)
+    GetSession()->KickPlayer();
+    sLog->outString("Player %s was kicked through the Anticheat System", GetName());
+}
+
+    if(sWorld->GetMvAnticheatBan() & 1)
+        sWorld->BanAccount(BAN_CHARACTER,Player,sWorld->GetMvAnticheatBanTime(),"Cheat","Anticheat");
+
+    if(sWorld->GetMvAnticheatBan() & 2)
     {
-
-        Field *fields = result->Fetch();
-        std::string LastIP = fields[0].GetString();
-        if(!LastIP.empty())
-            sWorld->BanAccount(BAN_IP,LastIP,sWorld->GetMvAnticheatBanTime(),"Cheat","Anticheat");
+        QueryResult result = LoginDatabase.PQuery("SELECT last_ip FROM account WHERE id=%u", Acc);
+        if(result)
+        {
+            Field *fields = result->Fetch();
+            std::string LastIP = fields[0].GetString();
+            if(!LastIP.empty())
+                sWorld->BanAccount(BAN_IP,LastIP,sWorld->GetMvAnticheatBanTime(),"Cheat","Anticheat");
+        }
     }
+    return true;
 }
-return true;
-}
-
+/*
+        // display warning at the center of the screen, hacky way?
+        std::string str = "";
+        if (sWorld->getBoolConfig(CONFIG_BAN_PLAYER))  //Make anticheat active.
+        {
+            if (m_Players[key].GetAverage() > 0.5f)
+            {
+                str = "Possible cheater found: " + std::string(player->GetName());
+                sWorld->BanCharacter(player->GetName(), "1h", str, "Anticheat");
+                sWorld->SendWorldText(LANG_BAN_CHEATER, player->GetName());
+            }
+        }
+        else
+        {
+        str = "|cFFFFFC00[AC]|cFF00FFFF[|cFF60FF00" + std::string(player->GetName()) + "|cFF00FFFF] Possible cheater!";
+        WorldPacket data(SMSG_NOTIFICATION, (str.size()+1));
+        data << str;
+        sWorld->SendGlobalGMMessage(&data);
+        }
+*/
 
 void WorldSession::HandleMoveWorldportAckOpcode(WorldPacket & /*recv_data*/) {
     sLog->outDebug(LOG_FILTER_NETWORKIO, "WORLD: got MSG_MOVE_WORLDPORT_ACK.");

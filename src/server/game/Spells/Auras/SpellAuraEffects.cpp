@@ -4323,10 +4323,11 @@ void AuraEffect::HandleAuraAllowFlight(AuraApplication const *aurApp,
     if (Player *plr = target->m_movedPlayer) {
         // allow flying
         WorldPacket data;
+        if (apply)
         {
             static_cast<Player*>(target)->SetCanFly(true);
             static_cast<Player*>(target)->m_anti_BeginFallZ=INVALID_HEIGHT;
-             data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
+            data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
         }
          else
         {
