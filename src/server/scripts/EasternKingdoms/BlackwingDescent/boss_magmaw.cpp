@@ -160,6 +160,8 @@ public:
 
 			IsInHeadPhase = false;
 
+            me->HandleEmoteCommand(15);
+
 			DespawnMinions();
 		}
 

@@ -499,7 +499,7 @@ public:
 
         void Register()
         {
-            OnEffectHitTarget += SpellEffectFn(spell_release_abberationsSpellScript::HandleDummy,EFFECT_0,SPELL_EFFECT_DUMMY);
+            OnEffect += SpellEffectFn(spell_release_abberationsSpellScript::HandleDummy,EFFECT_0,SPELL_EFFECT_DUMMY);
         }
     };
 
@@ -535,7 +535,7 @@ public:
 
         void Register()
         {
-            OnEffectHitTarget += SpellEffectFn(spell_release_all_abberationsSpellScript::HandleDummy,EFFECT_0,SPELL_EFFECT_DUMMY);
+            OnEffect += SpellEffectFn(spell_release_all_abberationsSpellScript::HandleDummy,EFFECT_0,SPELL_EFFECT_DUMMY);
         }
     };
 
