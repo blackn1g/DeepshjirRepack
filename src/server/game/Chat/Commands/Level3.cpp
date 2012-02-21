@@ -3900,9 +3900,15 @@ bool ChatHandler::HandleGMFlyCommand(const char *args)
     WorldPacket data(SMSG_MULTIPLE_PACKETS, 14);
     if (strncmp(args, "change", 7) == 0)
         if (target->canFly())
+        {
+            static_cast<Player*>((target))->SetCanFly(false);    
             data << uint16(SMSG_MOVE_UNSET_CAN_FLY);
+        }
         else
+        {
             data << uint16(SMSG_MOVE_SET_CAN_FLY);
+            static_cast<Player*>((target))->SetCanFly(true);
+        }
     else if (strncmp(args, "on", 3) == 0)
         data << uint16(SMSG_MOVE_SET_CAN_FLY);
     else if (strncmp(args, "off", 4) == 0)
