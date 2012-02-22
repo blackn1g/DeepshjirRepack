@@ -107,7 +107,7 @@ public:
                 break;
             case BOSS_OZUMAT:
                 /*if(encounter[0] == DONE)
-                creature->AI()->DoAction(ACTION_OZUMATE_PREPARE_NEXT_PHASE);*/
+                creature->AI()->DoAction(ACTION_OZUMAT_PREPARE_EVENT);*/
                 uiOzumat = creature->GetGUID();
                 break;
             case NPC_NEPTULON:
@@ -175,7 +175,7 @@ public:
                     }
 
                     if(Creature* ozumat = instance->GetCreature(uiOzumat))
-                        ozumat->AI()->DoAction(ACTION_OZUMATE_PREPARE_NEXT_PHASE);
+                        ozumat->AI()->DoAction(ACTION_OZUMAT_PREPARE_EVENT);
 
                     HandleGameObject(uiLadyNazjarDoor, true);
                     HandleGameObject(uiCommanderUlthokDoor, false);
@@ -207,6 +207,9 @@ public:
                     HandleGameObject(uiCommanderUlthokDoor, true);
                     HandleGameObject(uiMindebenderGhurshaDoor, true);
 
+                    // Because Mindebender Ghursha is still a little bit buggy...
+                    HandleGameObject(uiOzumatDoor, true);
+
                 }else if (data == IN_PROGRESS)
                 {
                     HandleGameObject(uiCommanderUlthokDoor, false);
@@ -233,7 +236,12 @@ public:
 
                 break;
             case DATA_OZUMAT:
-                break;
+                if(data == DONE)
+                    HandleGameObject(uiOzumatDoor, true);
+                else if (data == IN_PROGRESS)
+                    HandleGameObject(uiOzumatDoor, false);
+                else if (encounter[DATA_COMMANDER_ULTHOK] == DONE)
+                    HandleGameObject(uiCommanderUlthokDoor, true);
             }
 
             if (data == DONE)
