@@ -154,6 +154,7 @@ public:
         EventMap events;
 
         Creature* trons[4];
+
         uint8 activateTron;
         bool eventActive;
 
@@ -200,7 +201,7 @@ public:
 
                 eventActive = true;
                 me->MonsterSay("Activated",0,0);
-
+              
                 trons[MAGMATRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_MAGMATRON));
                 trons[ELECTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ELECTRON));
                 trons[ARCANOTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ARCANOTRON));

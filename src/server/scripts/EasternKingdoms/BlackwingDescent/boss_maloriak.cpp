@@ -487,14 +487,10 @@ public:
             return true;
         }
 
-        bool Load()
-        {
-            return true;
-        }
-
         void HandleDummy(SpellEffIndex effIndex)
         {
-            GetCaster()->MonsterSay("test",0,0);
+            if(Unit* caster = GetCaster())
+                caster->MonsterYell("Hi",0,0);
         }
 
         void Register()

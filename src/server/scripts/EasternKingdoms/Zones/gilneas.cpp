@@ -17,65 +17,9 @@
 
 #include "ScriptPCH.h"
 #include "Unit.h"
+#include "gilneas.h"
 
 //Phase 1
-enum eGilneasCityPhase1
-{
-    //Quests
-    QUEST_LOCKDOWN                                     = 14078,
-
-    //Spells
-    SPELL_PHASE_2                                      = 59073,
-
-    //Say
-    SAY_PRINCE_LIAM_GREYMANE_1                         = -1638000,
-    SAY_PRINCE_LIAM_GREYMANE_2                         = -1638001,
-    SAY_PRINCE_LIAM_GREYMANE_3                         = -1638002,
-    DELAY_SAY_PRINCE_LIAM_GREYMANE                     = 20000, //20 seconds repetition time
-
-    SAY_PANICKED_CITIZEN_1                             = -1638016,
-    SAY_PANICKED_CITIZEN_2                             = -1638017,
-    SAY_PANICKED_CITIZEN_3                             = -1638018,
-    SAY_PANICKED_CITIZEN_4                             = -1638019,
-
-    SAY_GILNEAS_CITY_GUARD_GATE_1                      = -1638022,
-    SAY_GILNEAS_CITY_GUARD_GATE_2                      = -1638023,
-    SAY_GILNEAS_CITY_GUARD_GATE_3                      = -1638024,
-};
-
-#define DELAY_EMOTE_PANICKED_CITIZEN urand(5000, 15000) //5-15 second time
-#define DELAY_SAY_PANICKED_CITIZEN urand(30000, 120000) //30sec - 1.5min
-#define DELAY_SAY_GILNEAS_CITY_GUARD_GATE urand(30000, 120000) //30sec - 1.5min
-
-//Phase 2
-enum eGilneasCityPhase2
-{
-    //Sounds
-    SOUND_SWORD_FLESH                                 = 143,
-    SOUND_SWORD_PLATE                                 = 147,
-    DELAY_SOUND                                       = 500,
-    DELAY_ANIMATE                                     = 2000,
-
-    //Spells
-    SPELL_PHASE_4                                     = 59074,
-
-    //NPCs
-    NPC_PRINCE_LIAM_GREYMANE                          = 34913,
-    NPC_GILNEAS_CITY_GUARD                            = 34916,
-    NPC_RAMPAGING_WORGEN_1                            = 34884,
-    NPC_RAMPAGING_WORGEN_2                            = 35660,
-    NPC_FRIGHTENED_CITIZEN_1                          = 34981,
-    NPC_FRIGHTENED_CITIZEN_2                          = 35836,
-
-    //Say
-    YELL_PRINCE_LIAM_GREYMANE_1                       = -1638025,
-    YELL_PRINCE_LIAM_GREYMANE_2                       = -1638026,
-    YELL_PRINCE_LIAM_GREYMANE_3                       = -1638027,
-    YELL_PRINCE_LIAM_GREYMANE_4                       = -1638028,
-    YELL_PRINCE_LIAM_GREYMANE_5                       = -1638029,
-    DELAY_YELL_PRINCE_LIAM_GREYMANE                   = 2000,
-};
-
 /*######
 ## npc_prince_liam_greymane_phase1
 ######*/
@@ -143,236 +87,6 @@ public:
 };
 
 /*######
-## npc_panicked_citizen
-######*/
-
-uint32 guid_panicked_nextsay = 0; //GUID of the Panicked Citizen that will say random text, this is to prevent more than 1 npc speaking
-uint32 tSay_panicked = 30000; //Time left to say
-
-class npc_panicked_citizen : public CreatureScript
-{
-public:
-    npc_panicked_citizen() : CreatureScript("npc_panicked_citizen") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_panicked_citizenAI (creature);
-    }
-
-    struct npc_panicked_citizenAI : public ScriptedAI
-    {
-        npc_panicked_citizenAI(Creature* creature) : ScriptedAI(creature) {}
-
-        uint32 tEmote; //Time left for doing an emote
-
-        //Evade or Respawn
-        void Reset()
-        {
-            if (me->GetPhaseMask() == 1)
-            {
-                tEmote = DELAY_EMOTE_PANICKED_CITIZEN; //Reset timer
-                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0); //Reset emote state
-            }
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            //Out of combat and in Phase 1
-            if (!me->getVictim() && me->GetPhaseMask() == 1)
-            {
-                //Timed emote
-                if (tEmote <= diff)
-                {
-                    //Do random emote (1, 5, 18, 20, 430)
-                    me->HandleEmoteCommand(RAND(
-                        EMOTE_ONESHOT_TALK,
-                        EMOTE_ONESHOT_EXCLAMATION,
-                        EMOTE_ONESHOT_CRY,
-                        EMOTE_ONESHOT_BEG,
-                        EMOTE_ONESHOT_COWER));
-
-                    tEmote = DELAY_EMOTE_PANICKED_CITIZEN; //Reset timer
-                }
-                else
-                {
-                    tEmote -= diff;
-                }
-
-                //Randomly select an NPC to say the next random text
-                if (!guid_panicked_nextsay)
-                {
-                    if (urand(0, 1))
-                    {
-                        guid_panicked_nextsay = me->GetGUIDLow();
-                    }
-                }
-
-                //If this is the selected npc to say
-                if (guid_panicked_nextsay == me->GetGUIDLow())
-                {
-                    //Timed say
-                    if (tSay_panicked <= diff)
-                    {
-                        //Say random
-                        DoScriptText(RAND(
-                            SAY_PANICKED_CITIZEN_1,
-                            SAY_PANICKED_CITIZEN_2,
-                            SAY_PANICKED_CITIZEN_3,
-                            SAY_PANICKED_CITIZEN_4),
-                        me);
-
-                        guid_panicked_nextsay = 0; //Reset Selected next NPC
-                        tSay_panicked = DELAY_SAY_PANICKED_CITIZEN; //Reset timer
-                    }
-                    else
-                    {
-                        tSay_panicked -= diff;
-                    }
-                }
-            }
-        }
-    };
-};
-
-/*######
-## npc_panicked_citizen_2
-######*/
-
-#define PATHS_COUNT_PANICKED_CITIZEN      8
-
-struct Waypoint
-{
-    uint32 pathID;
-    float x, y;
-};
-
-class npc_panicked_citizen_2 : public CreatureScript
-{
-public:
-    npc_panicked_citizen_2() : CreatureScript("npc_panicked_citizen_2") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_panicked_citizen_2AI (creature);
-    }
-
-    struct npc_panicked_citizen_2AI : public ScriptedAI
-    {
-        npc_panicked_citizen_2AI(Creature* creature) : ScriptedAI(creature) {}
-
-        bool running, onceRun;
-        uint32 pathID, runDelay;
-        Waypoint firstWaypoints[PATHS_COUNT_PANICKED_CITIZEN];
-
-        void LoadWaypoints(Waypoint* waypoints)
-        {
-            QueryResult result[PATHS_COUNT_PANICKED_CITIZEN];
-            result[0] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851000 and `point` = 1");
-            result[1] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851001 and `point` = 1");
-            result[2] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851002 and `point` = 1");
-            result[3] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851003 and `point` = 1");
-            result[4] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851004 and `point` = 1");
-            result[5] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851005 and `point` = 1");
-            result[6] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851006 and `point` = 1");
-            result[7] = WorldDatabase.Query("SELECT `id`, `position_x`, `position_y` FROM waypoint_data WHERE id = 34851007 and `point` = 1");
-
-            for (uint8 i = 0; i < PATHS_COUNT_PANICKED_CITIZEN; i ++)
-            {
-                Field* Fields = result[i]->Fetch();
-                waypoints[i].pathID = Fields[0].GetUInt32();
-                waypoints[i].x      = Fields[1].GetFloat();
-                waypoints[i].y      = Fields[2].GetFloat();
-            }
-        }
-
-        uint32 FindNearestPath(Waypoint* paths)
-        {
-            uint32 pathIDs[PATHS_COUNT_PANICKED_CITIZEN], nearestPathID;
-            float distances[PATHS_COUNT_PANICKED_CITIZEN], minDist;
-
-            for (uint8 i = 0; i < PATHS_COUNT_PANICKED_CITIZEN; i ++)
-            {
-                distances[i] = me->GetDistance2d(paths[i].x, paths[i].y);
-                pathIDs[i] = paths[i].pathID;
-            }
-            for (uint8 i = 0; i < PATHS_COUNT_PANICKED_CITIZEN; i ++)
-            {
-                if (i == 0)
-                {
-                    minDist = distances[i];
-                    nearestPathID = pathIDs[i];
-                }
-                else if (minDist > distances[i])
-                {
-                    minDist = distances[i];
-                    nearestPathID = pathIDs[i];
-                }
-            }
-            return nearestPathID;
-        }
-
-        void Reset()
-        {
-            me->Respawn(1);
-        }
-
-        void JustRespawned()
-        {
-            if (me->GetDefaultMovementType() == WAYPOINT_MOTION_TYPE)
-            {
-                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
-                runDelay = urand(2000, 8000);
-                running = true;
-                onceRun = true;
-            }
-            else running = false;
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (running)
-            {
-                if (runDelay <= diff && onceRun)
-                {
-                    LoadWaypoints(firstWaypoints);
-                    pathID = FindNearestPath(firstWaypoints);
-                    me->GetMotionMaster()->MovePath(pathID, false);
-                    me->HandleEmoteCommand(EMOTE_ONESHOT_COWER);
-                    onceRun = false;
-                }
-                else runDelay -= diff;
-            }
-        }
-    };
-};
-
-/*######
-## npc_lieutenant_walden
-######*/
-
-class npc_lieutenant_walden : public CreatureScript
-{
-public:
-    npc_lieutenant_walden() : CreatureScript("npc_lieutenant_walden") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_lieutenant_waldenAI (creature);
-    }
-
-    struct npc_lieutenant_waldenAI : public ScriptedAI
-    {
-        npc_lieutenant_waldenAI(Creature* creature) : ScriptedAI(creature) {}
-
-        void sQuestReward(Player* player, const Quest* quest, uint32 data)
-        {
-            if (quest->GetQuestId() == QUEST_LOCKDOWN && player->GetPhaseMask() == 1)
-                player->SetAuraStack(SPELL_PHASE_2, player, 1); //phaseshift
-        }
-    };
-};
-
-/*######
 ## npc_gilneas_city_guard_phase1
 ######*/
 
@@ -396,9 +110,7 @@ public:
         void Reset()
         {
             if (me->GetGUIDLow() == 3486400)
-            {
                 tSay = DELAY_SAY_GILNEAS_CITY_GUARD_GATE; //Reset timer
-            }
         }
 
         void UpdateAI(const uint32 diff)
@@ -427,6 +139,7 @@ public:
     };
 };
 
+//Phase 2
 /*######
 ## npc_gilneas_city_guard_phase2
 ######*/
@@ -503,12 +216,15 @@ public:
                 playSound = false;
             }
 
-            if (playSound == true) tSound -= diff;
+            if (playSound == true)
+                tSound -= diff;
 
             if (dmgCount < 2)
                 DoMeleeAttackIfReady();
-            else if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
-            else if (me->getVictim()->isPet()) dmgCount = 0;
+            else
+                if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
+            else
+                if (me->getVictim()->isPet()) dmgCount = 0;
             else
             {
                 if (tAnimate <= diff)
@@ -638,8 +354,10 @@ public:
                 //Attack
                 if (dmgCount < 2)
                     DoMeleeAttackIfReady();
-                else if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
-                else if (me->getVictim()->isPet()) dmgCount = 0;
+                else
+                    if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
+                else
+                    if (me->getVictim()->isPet()) dmgCount = 0;
                 else
                 {
                     if (tAnimate <= diff)
@@ -660,15 +378,34 @@ public:
 };
 
 /*######
-## npc_rampaging_worgen
+## npc_lieutenant_walden
 ######*/
 
-enum eRampaging_worgen
+class npc_lieutenant_walden : public CreatureScript
 {
-    SPELL_ENRAGE    = 8599
+public:
+    npc_lieutenant_walden() : CreatureScript("npc_lieutenant_walden") {}
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_lieutenant_waldenAI(creature);
+    }
+
+    struct npc_lieutenant_waldenAI : public ScriptedAI
+    {
+        npc_lieutenant_waldenAI(Creature* creature) : ScriptedAI(creature) {}
+
+        void sQuestReward(Player* player, const Quest* quest, uint32 data)
+        {
+            if (quest->GetQuestId() == QUEST_LOCKDOWN && player->GetPhaseMask() == 1)
+                player->SetAuraStack(SPELL_PHASE_2, player, 1); //phaseshift
+        }
+    };
 };
 
-#define CD_ENRAGE      30000
+/*######
+## npc_rampaging_worgen
+######*/
 
 class npc_rampaging_worgen : public CreatureScript
 {
@@ -742,7 +479,8 @@ public:
             else tEnrage -= diff;
 
             //play attack sound
-            if (playSound == true) tSound -= diff;
+            if (playSound == true)
+                tSound -= diff;
 
             if (tSound <= diff)
             {
@@ -753,8 +491,10 @@ public:
 
             if (dmgCount < 2)
                 DoMeleeAttackIfReady();
-            else if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
-            else if (me->getVictim()->isPet()) dmgCount = 0;
+            else
+                if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
+            else
+                if (me->getVictim()->isPet()) dmgCount = 0;
             else
             {
                 if (tAnimate <= diff)
@@ -793,8 +533,8 @@ public:
             tEnrage = 0;
             tRun = 500;
             onceRun = true;
-            x = me->m_positionX+cos(me->m_orientation)*8;
-            y = me->m_positionY+sin(me->m_orientation)*8;
+            x = me->m_positionX+cos(me->_orientation)*8;
+            y = me->m_positionY+sin(me->_orientation)*8;
             z = me->m_positionZ;
             willCastEnrage = urand(0, 1);
         }
@@ -806,7 +546,8 @@ public:
                 me->GetMotionMaster()->MoveCharge(x, y, z, 8);
                 onceRun = false;
             }
-            else tRun -= diff;
+            else
+                tRun -= diff;
 
             if (!UpdateVictim())
                 return;
@@ -820,7 +561,8 @@ public:
                     tEnrage = CD_ENRAGE;
                 }
             }
-            else tEnrage -= diff;
+            else
+                tEnrage -= diff;
 
             DoMeleeAttackIfReady();
         }
@@ -830,13 +572,6 @@ public:
 /*######
 ## go_merchant_square_door
 ######*/
-
-enum eMerchant_square_door
-{
-    QUEST_EVAC_MERC_SQUA      = 14098
-};
-
-#define SUMMON1_TTL       300000
 
 class go_merchant_square_door : public GameObjectScript
 {
@@ -848,15 +583,17 @@ public:
     uint8 spawnKind;
     Player* aPlayer;
     GameObject* go;
+    uint32 DoorTimer;
 
     bool OnGossipHello(Player* player, GameObject* go)
     {
-        if (player->GetQuestStatus(QUEST_EVAC_MERC_SQUA) == QUEST_STATUS_INCOMPLETE)
+        if (player->GetQuestStatus(QUEST_EVAC_MERC_SQUA) == QUEST_STATUS_INCOMPLETE && go->GetGoState() == GO_STATE_READY)
         {
             aPlayer          = player;
             opened           = 1;
             tQuestCredit     = 2500;
-            go->Use(player);
+            go->SetGoState(GO_STATE_ACTIVE);
+            DoorTimer = DOOR_TIMER;
             spawnKind = urand(1, 3); //1, 2=citizen, 3=citizen&worgen (66%, 33%)
             angle = go->GetOrientation();
             x = go->GetPositionX()-cos(angle)*2;
@@ -908,31 +645,21 @@ public:
             }
             else tQuestCredit -= ((float)diff/8);
         }
+        if (DoorTimer <= diff)
+            {
+                if (go->GetGoState() == GO_STATE_ACTIVE)
+                    go->SetGoState(GO_STATE_READY);
+
+                DoorTimer = DOOR_TIMER;
+            }
+        else
+            DoorTimer -= diff;
     }
 };
 
 /*######
 ## npc_frightened_citizen
 ######*/
-
-enum eFrightened_citizen
-{
-    SAY_CITIZEN_1                = -1638003,
-    SAY_CITIZEN_2                = -1638004,
-    SAY_CITIZEN_3                = -1638005,
-    SAY_CITIZEN_4                = -1638006,
-    SAY_CITIZEN_5                = -1638007,
-    SAY_CITIZEN_6                = -1638008,
-    SAY_CITIZEN_7                = -1638009,
-    SAY_CITIZEN_8                = -1638010,
-    SAY_CITIZEN_1b               = -1638011,
-    SAY_CITIZEN_2b               = -1638012,
-    SAY_CITIZEN_3b               = -1638013,
-    SAY_CITIZEN_4b               = -1638014,
-    SAY_CITIZEN_5b               = -1638015,
-};
-
-#define PATHS_COUNT  2
 
 struct Point
 {
@@ -1006,9 +733,7 @@ public:
         void MultiDistanceMeter(Point *p, uint8 pointsCount, float *dist)
         {
             for (uint8 i = 0; i <= (pointsCount-1); i++)
-            {
                 dist[i] = me->GetDistance2d(p[i].x, p[i].y);
-            }
         }
 
         WayPointID GetNearestPoint(Paths paths)
@@ -1036,17 +761,17 @@ public:
             for (uint8 i = 0; i < PATHS_COUNT; i++)
             {
                 if (i == 0)
-                    {
-                        lowestDist = lowestDists[i];
-                        nearestPointID.pointID = nearestPointsID[i];
-                        nearestPointID.pathID = i;
-                    }
-                    else if (lowestDist > lowestDists[i])
-                    {
-                        lowestDist = lowestDists[i];
-                        nearestPointID.pointID = nearestPointsID[i];
-                        nearestPointID.pathID = i;
-                    }
+                {
+                    lowestDist = lowestDists[i];
+                    nearestPointID.pointID = nearestPointsID[i];
+                    nearestPointID.pathID = i;
+                }
+                else if (lowestDist > lowestDists[i])
+                {
+                    lowestDist = lowestDists[i];
+                    nearestPointID.pointID = nearestPointsID[i];
+                    nearestPointID.pathID = i;
+                }
             }
             return nearestPointID;
         }
@@ -1058,8 +783,8 @@ public:
             tRun2          = 2500;
             tSay           = 1000;
             onceRun = onceRun2 = onceSay = onceGet = true;
-            x = me->m_positionX+cos(me->m_orientation)*5;
-            y = me->m_positionY+sin(me->m_orientation)*5;
+            x = me->m_positionX+cos(me->_orientation)*5;
+            y = me->m_positionY+sin(me->_orientation)*5;
             z = me->m_positionZ;
         }
 
@@ -1070,7 +795,8 @@ public:
                 me->GetMotionMaster()->MoveCharge(x, y, z, 8);
                 onceRun = false;
             }
-            else tRun -= diff;
+            else
+                tRun -= diff;
 
             if (tSay <= diff && onceSay)
             {
@@ -1224,7 +950,8 @@ public:
                         in_progress = false;
                     }
                 }
-                else phaseTime -= diff;
+                else
+                    phaseTime -= diff;
             }
 
             DoMeleeAttackIfReady();
@@ -1312,7 +1039,7 @@ public:
             loc.m_positionX   = -1818.4f;
             loc.m_positionY   = 2294.25f;
             loc.m_positionZ   = 42.2135f;
-            loc.m_orientation = 3.14f;
+            loc._orientation = 3.14f;
 
             player->SetHomebind(loc, 4786);
         }
@@ -1385,15 +1112,13 @@ class spell_keg_placed : public SpellScriptLoader
 void AddSC_gilneas()
 {
     new npc_gilneas_city_guard_phase1();
-    new npc_gilneas_city_guard_phase2();
     new npc_prince_liam_greymane_phase1();
+    new npc_gilneas_city_guard_phase2();
     new npc_prince_liam_greymane_phase2();
     new npc_rampaging_worgen();
     new npc_rampaging_worgen2();
     new go_merchant_square_door();
     new npc_frightened_citizen();
-    new npc_panicked_citizen();
-    new npc_panicked_citizen_2();
     new npc_lieutenant_walden();
     new npc_lord_darius_crowley();
     new npc_josiah_avery();

@@ -1,5 +1,13 @@
 /*
+<<<<<<< HEAD
  * Copyright (C) 2010-2011 SkyFire <http://www.projectskyfire.org/>
+=======
+ * Copyright (C) 2010 - 2012 ProjectSkyfire <http://www.projectskyfire.org/>
+ *
+ * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+ * Copyright (C) 2008 - 2012 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+>>>>>>> b4d57ee0d106e9094414e6cb860adcfe30a6b135
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
