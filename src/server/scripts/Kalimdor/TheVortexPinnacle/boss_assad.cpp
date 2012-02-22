@@ -209,6 +209,6 @@ class mob_star: public CreatureScript
 
 void AddSC_boss_assad()
 {
-    new boss_assad();
-	new mob_star();
+    /*new boss_assad();
+	new mob_star();*/
 };

@@ -43,11 +43,31 @@ Position const SpawnPositions[] =
     {-163.4171f, 978.427f, 229.31f, 0.4833f},
 };
 
+Position const OzumatPosition[2] =
+{
+    {-154.037f, 960.586f, 314.759f, 1.2f},
+    {-187.9f, 939.332f, 254.46f, 1.01f},
+};
+
 enum Spells
 {
+    SPELL_GROUND_EFFECT = 83607,
+    SPELL_GROUND_EFFECT_BLACK = 83607,
+
     SPELL_ENTANGLING_GRASP = 83463,
     SPELL_NEPTULON_BEAM_VISUAL = 79511,
-};
+
+    SPELL_TIDAL_SURGE = 76133,
+    SPELL_BLIGHT_OF_OZUMAT_VISUAL = 83672,
+    SPELL_BLIGHT_OF_OZUMAT_VISUAL_GROUND_EFFECT = 83525,
+    SPELL_SUMMON_BLIGHT_OF_OZUMAT = 83524,
+
+    // Voidzone Damage
+    SPELL_BLIGHT_OF_OZUMAT_DAMAGE_ZONE = 83608, // HC: 91494
+
+    // Phase 3 AOE
+    SPELL_BLIGHT_OF_OZUMAT_DAMAGE_AOE = 83561, // HC: 91495   
+};  
 
 class mob_neptulon : public CreatureScript
 {
@@ -77,6 +97,9 @@ public:
         {
             if (instance)
                 instance->SetData(DATA_OZUMAT, NOT_STARTED);
+
+            if (Creature* ozumat = ObjectAccessor::GetCreature(*me, instance->GetData64(BOSS_OZUMAT)))
+                ozumat->AI()->DoAction(ACTION_OZUMAT_RESET_EVENT);
 
             me->RemoveAllAuras();
             me->CastStop();
@@ -111,20 +134,21 @@ public:
 
         void SummonedCreatureDies(Creature* summon, Unit* /*killer*/)
         {
-            if(summon->GetEntry() != NPC_DEEP_MURLOC_DRUDGE && nextStep != 0)
+            if(summon->GetEntry() == NPC_FACELESS_SAPPER && nextStep > 0)
                 nextStep--;
 
             if(nextStep == 0)
             {
-                waveCount++;
+                waveCount=8;
                 HandleWave();
             }
         }
 
         void HandleWave()
         {          
-            if(waveCount < 7)
-            {
+            if(waveCount < 6)
+            { // Phase 1
+
                 waveCount++;
 
                 uint32 summonEntry;
@@ -133,7 +157,12 @@ public:
                 if(waveCount == 1)
                 {
                     me->MonsterSay(SAY_1,0,0);
-                     DoCastAOE(SPELL_NEPTULON_BEAM_VISUAL,true);
+                    DoCastAOE(SPELL_NEPTULON_BEAM_VISUAL,true);
+                    //me->AddAura(SPELL_GROUND_EFFECT, me);
+                    DoZoneInCombat(me);
+
+                    if (Creature* ozumat = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OZUMAT)))
+                            ozumat->AI()->DoAction(ACTION_OZUMATE_PREPARE_NEXT_PHASE);
 
                 }else if (waveCount == 6)
                 {
@@ -145,7 +174,11 @@ public:
                             summon->CastSpell(me, SPELL_ENTANGLING_GRASP, true);
                         }
 
-                    return;
+                        if (Creature* ozumat = ObjectAccessor::GetCreature(*me, instance->GetData64(BOSS_OZUMAT)))
+                            ozumat->AI()->DoAction(ACTION_OZUMAT_START_EVENT);
+
+                        waveCount=7;
+                        return;
                 }
 
                 switch(urand(0,2))
@@ -169,13 +202,22 @@ public:
                     }
 
             }else if(waveCount == 7)
-            {
+            { // Phase 2
+
                 if(Creature* summon = me->SummonCreature(NPC_BLIGHT_BEAST, SpawnPositions[urand(0,2)],TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1000))
                     summon->AI()->DoZoneInCombat(summon);
 
             }else if(waveCount == 8)
-            {
-                me->MonsterSay("final phase",0,0);
+            { // Phase 3
+
+                if (Creature* ozumat = ObjectAccessor::GetCreature(*me, instance->GetData64(BOSS_OZUMAT)))
+                    ozumat->AI()->DoAction(ACTION_OZUMAT_FINAL_PHASE);
+
+                instance->DoCastSpellOnPlayers(SPELL_TIDAL_SURGE);
+                waveCount= 9;
+            }else if(waveCount == 9)
+            { // End encounter and Spawn Chest
+
             }
         }
 
@@ -234,45 +276,80 @@ public:
         boss_ozumatAI(Creature* creature) : ScriptedAI(creature)
         {
             instance = creature->GetInstanceScript();
+            creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+            creature->SetReactState(REACT_PASSIVE);
         }
 
         InstanceScript* instance;
-        EventMap events;
+        bool isEventInProgress;
+        uint32 abilityTimer;
+        uint8 phase;
 
         void Reset()
         {
-            events.Reset();
-        }
-
-        void EnterCombat(Unit* /*who*/)
-        {
-
-            //events.ScheduleEvent(EVENT_TEST, urand(10000,12000));
-        }
+            isEventInProgress = false;
+            phase = 0;
+        };
 
         void UpdateAI(const uint32 diff)
         {
-            if (!UpdateVictim() || me->HasUnitState(UNIT_STAT_CASTING))
+            if (!isEventInProgress)
                 return;
 
-            events.Update(diff);
-
-            while (uint32 eventId = events.ExecuteEvent())
-            {
-                /*switch (eventId)
+            if (abilityTimer <= diff)
+            {	
+                if(phase == 1)
                 {
+                    if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
+                        target->CastSpell(target, SPELL_SUMMON_BLIGHT_OF_OZUMAT, true);
 
-                case EVENT_TEST:
-                DoCastVictim(SPELL_ENFEEBLING_BLOW);
-                events.ScheduleEvent(EVENT_ENFEEBLING_BLOW, urand(19000,24000));
+                    abilityTimer = 10000;
+                } else
+                {
+                    instance->DoCastSpellOnPlayers(SPELL_BLIGHT_OF_OZUMAT_DAMAGE_AOE);
+                    abilityTimer = 6000;
+                }
+
+            } else abilityTimer -= diff;
+        }
+
+        void DoAction(const int32 action)
+        {
+            switch(action)
+            {
+            case ACTION_OZUMATE_PREPARE_NEXT_PHASE:
+                if(phase == 0)
+                {
+                    me->GetMotionMaster()->MovePoint(0, OzumatPosition[0]);
+                    me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_CUSTOM_SPELL_01);
+                    phase = 1;
+                }
                 break;
 
-                default:
-                break;
-                }*/
-            }		
+            case ACTION_OZUMAT_START_EVENT:
+                if(phase == 0)
+                    DoAction(ACTION_OZUMATE_PREPARE_NEXT_PHASE);
 
-            DoMeleeAttackIfReady();
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+                DoZoneInCombat(me);
+                abilityTimer = 3000;
+                break;
+
+            case ACTION_OZUMAT_RESET_EVENT:
+                if(phase > 0)
+                {
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE);
+                    me->SetReactState(REACT_PASSIVE);
+                    phase = 0;
+                }
+                break;
+
+            case ACTION_OZUMAT_FINAL_PHASE:
+                me->GetMotionMaster()->MovePoint(0, OzumatPosition[1]);
+                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STAND);
+                phase = 2;
+                break;
+            }
         }
     };
 };

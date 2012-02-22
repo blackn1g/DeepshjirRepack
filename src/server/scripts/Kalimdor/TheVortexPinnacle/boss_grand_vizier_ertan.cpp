@@ -278,6 +278,6 @@ public:
 
 void AddSC_boss_grand_vizir_ertan()
 {
-	new boss_vizir_ertan();
-	new npc_lurking_tempest();
+	/*new boss_vizir_ertan();
+	new npc_lurking_tempest();*/
 };

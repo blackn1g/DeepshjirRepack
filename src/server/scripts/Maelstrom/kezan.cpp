@@ -23,7 +23,7 @@
 #include "Player.h"
 #include "Creature.h"
 
-// npc_deffiant_troll
+// npc_defiant_troll
 enum NPC_DeffiantTroll
 {
     DEFFIANT_KILL_CREDIT               = 34830,

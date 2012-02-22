@@ -2850,21 +2850,17 @@ void Player::SetInWater(bool apply) {
     if (apply) m_anti_BeginFallZ=INVALID_HEIGHT;
 }
 
-void Player::SetGameMaster(bool on) {
-    if (on) {
+void Player::SetGameMaster(bool on)
+{
+    if (on)
+    {
         m_ExtraFlags |= PLAYER_EXTRA_GM_ON;
         setFaction(35);
+        SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_GM);
+        SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_ALLOW_CHEAT_SPELLS);
 
-        if (sWorld->getIntConfig(CONFIG_GM_DEV_TAG_ENABLE) == 1) {
-            if (sWorld->getIntConfig(CONFIG_GM_DEV_TAG_LEVEL)
-                    == GetSession()->GetSecurity())
-                SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_DEVELOPER);
-            else
-                SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_GM);
-        } else
-            SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_GM);
-
-        if (Pet* pet = GetPet()) {
+        if (Pet* pet = GetPet())
+        {
             pet->setFaction(35);
             pet->getHostileRefManager().setOnlineOfflineState(false);
         }
@@ -2875,27 +2871,30 @@ void Player::SetGameMaster(bool on) {
         getHostileRefManager().setOnlineOfflineState(false);
         CombatStopWithPets();
 
-        SetPhaseMask(PHASEMASK_ANYWHERE, false); // see and visible in all phases
-        m_serverSideVisibilityDetect.SetValue(SERVERSIDE_VISIBILITY_GM,
-                GetSession()->GetSecurity());
-    } else {
+        SetPhaseMask(uint32(PHASEMASK_ANYWHERE), false);    // see and visible in all phases
+        m_serverSideVisibilityDetect.SetValue(SERVERSIDE_VISIBILITY_GM, GetSession()->GetSecurity());
+    }
+    else
+    {
         // restore phase
         uint32 newPhase = 0;
         AuraEffectList const& phases = GetAuraEffectsByType(SPELL_AURA_PHASE);
         if (!phases.empty())
-            for (AuraEffectList::const_iterator itr = phases.begin();
-                    itr != phases.end(); ++itr)
+            for (AuraEffectList::const_iterator itr = phases.begin(); itr != phases.end(); ++itr)
                 newPhase |= (*itr)->GetMiscValue();
 
         if (!newPhase)
             newPhase = PHASEMASK_NORMAL;
 
-        m_ExtraFlags &= ~PLAYER_EXTRA_GM_ON;
+        SetPhaseMask(newPhase, false);
+
+        m_ExtraFlags &= ~ PLAYER_EXTRA_GM_ON;
         setFactionForRace(getRace());
         RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_GM);
-        RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_DEVELOPER);
+        RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_ALLOW_CHEAT_SPELLS);
 
-        if (Pet* pet = GetPet()) {
+        if (Pet* pet = GetPet())
+        {
             pet->setFaction(getFaction());
             pet->getHostileRefManager().setOnlineOfflineState(true);
         }
@@ -2908,8 +2907,7 @@ void Player::SetGameMaster(bool on) {
         UpdateArea(m_areaUpdateId);
 
         getHostileRefManager().setOnlineOfflineState(true);
-        m_serverSideVisibilityDetect.SetValue(SERVERSIDE_VISIBILITY_GM,
-                SEC_PLAYER);
+        m_serverSideVisibilityDetect.SetValue(SERVERSIDE_VISIBILITY_GM, SEC_PLAYER);
     }
 
     UpdateObjectVisibility();

@@ -215,6 +215,65 @@ public:
     };
 };
 
+class mob_drakonid_chainwielder : public CreatureScript
+{
+public:
+    mob_drakonid_chainwielder() : CreatureScript("mob_drakonid_chainwielder") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new mob_drakonid_chainwielderAI (creature);
+    }
+
+    struct mob_drakonid_chainwielderAI : public ScriptedAI
+    {
+        mob_drakonid_chainwielderAI(Creature* creature) : ScriptedAI(creature)
+        {
+            instance = creature->GetInstanceScript();
+        }
+
+        InstanceScript* instance;
+		EventMap events;
+		
+        void Reset()
+		{
+			events.Reset();
+		}
+
+        void EnterCombat(Unit* /*who*/)
+		{
+			me->GetMotionMaster()->MoveTargetedHome();
+			
+			//events.ScheduleEvent(EVENT_TEST, urand(10000,12000));
+		}
+
+        void UpdateAI(const uint32 diff)
+		{
+			if (!UpdateVictim() || me->HasUnitState(UNIT_STAT_CASTING))
+				return;
+			
+			events.Update(diff);
+
+			while (uint32 eventId = events.ExecuteEvent())
+			{
+				/*switch (eventId)
+				{
+
+				case EVENT_TEST:
+					DoCastVictim(SPELL_ENFEEBLING_BLOW);
+					events.ScheduleEvent(EVENT_ENFEEBLING_BLOW, urand(19000,24000));
+					break;
+				
+				default:
+					break;
+				}*/
+			}		
+
+            DoMeleeAttackIfReady();
+        }
+    };
+};
+
 /********
 ** Ivoroc
 *********/
@@ -235,8 +294,8 @@ struct mob_ivorocAI : public ScriptedAI
            
 	void Reset()
 	{
-		malediction_de_guerison = 25000;
-		ombreflamme = 37000;
+		malediction_de_guerison = 10000;
+		ombreflamme = 13000;
 	}  
  
 	void UpdateAI(const uint32 diff)
@@ -244,14 +303,15 @@ struct mob_ivorocAI : public ScriptedAI
         if (malediction_de_guerison<= diff)
         {
             DoCast(SelectTarget(SELECT_TARGET_RANDOM,1,100,true), spell_malediction_de_guerison);
-            malediction_de_guerison = 25000;
+            malediction_de_guerison = 17000;
         } else malediction_de_guerison-= diff;
                    
         if (ombreflamme<= diff)
         {
             if(Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-            DoCast(pTarget, spell_ombreflamme);
-            ombreflamme = 37000;
+                DoCast(pTarget, spell_ombreflamme);
+
+            ombreflamme = 15000;
         } else ombreflamme-= diff;
  
 		DoMeleeAttackIfReady();
@@ -289,10 +349,10 @@ struct mob_maimgorAI : public ScriptedAI
  
 	void Reset()
 	{
-		etreinte_percante = 20000;
+		etreinte_percante = 17000;
         enrager = 46000;
         fouette_queue = 15000;
-        ombreflamme = 30000;
+        ombreflamme = 20000;
 	}
  
 	void UpdateAI(const uint32 diff)
@@ -301,7 +361,7 @@ struct mob_maimgorAI : public ScriptedAI
 		{
 			if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, -5.0f, true))
 			DoCast(target, spell_etreinte_percante);
-			etreinte_percante = 20000;
+			etreinte_percante = 17000;
 		} else etreinte_percante-= diff;
  
 		if (enrager<= diff)
@@ -321,7 +381,7 @@ struct mob_maimgorAI : public ScriptedAI
 		{
 			if (Unit *target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
 			DoCast(target, spell_ombreflamme);
-			ombreflamme = 30000;
+			ombreflamme = 20000;
 		} else ombreflamme-= diff;
  
 		DoMeleeAttackIfReady();
@@ -394,14 +454,14 @@ struct mob_brule_pourpointAI : public ScriptedAI
 #define spell_frappe_mortelle 80390 // Frappe_Mortelle
 #define spell_vague_explosive 80391 // Vague_Explosive
  
-class mob_pourfendeur_drakonide: public CreatureScript
+class mob_drakonid_slayer: public CreatureScript
 {
 public:
- mob_pourfendeur_drakonide() : CreatureScript("mob_pourfendeur_drakonide") { }
+ mob_drakonid_slayer() : CreatureScript("mob_drakonid_slayer") { }
  
-struct mob_pourfendeur_drakonideAI : public ScriptedAI
+struct mob_drakonid_slayerAI : public ScriptedAI
 {
-	mob_pourfendeur_drakonideAI(Creature *c) : ScriptedAI(c) {}
+	mob_drakonid_slayerAI(Creature *c) : ScriptedAI(c) {}
  
 	uint32 enchainement;
 	uint32 frappe_mortelle;
@@ -440,13 +500,13 @@ struct mob_pourfendeur_drakonideAI : public ScriptedAI
 
 	CreatureAI* GetAI(Creature* pCreature) const
 	{
-		return new mob_pourfendeur_drakonideAI(pCreature);
+		return new mob_drakonid_slayerAI(pCreature);
 	}
  
 };
 
 /*****************
-** Batard Drakodon
+** Drakeadon Mongrel
 ******************/
 #define spell_acide_corrosif 80345 // Acide_Corrosif
 #define spell_charge 79904 // Charge
@@ -455,14 +515,14 @@ struct mob_pourfendeur_drakonideAI : public ScriptedAI
 #define spell_trou_de_temps RAND(80329,80330)
 #define spell_la_chair RAND(80341,80332)
  
-class mob_batard_drakodon: public CreatureScript
+class mob_drakeadon_mongrel: public CreatureScript
 {
 public:
- mob_batard_drakodon() : CreatureScript("mob_batard_drakodon") {}
+ mob_drakeadon_mongrel() : CreatureScript("mob_drakeadon_mongrel") {}
  
-struct mob_batard_drakodonAI : public ScriptedAI
+struct mob_drakeadon_mongrelAI : public ScriptedAI
 {
-	mob_batard_drakodonAI(Creature *c) : ScriptedAI(c) {}
+	mob_drakeadon_mongrelAI(Creature *c) : ScriptedAI(c) {}
  
 	uint32 acide_corrosif;
 	uint32 brulure_de_givre;
@@ -471,7 +531,7 @@ struct mob_batard_drakodonAI : public ScriptedAI
 	uint32 pouvoir_despece;
 	uint32 trou_de_temps;
  
-	void reset()
+	void Reset()
 	{
 		acide_corrosif = 20000;
 		brulure_de_givre = 45000;
@@ -526,16 +586,17 @@ struct mob_batard_drakodonAI : public ScriptedAI
 
 	CreatureAI* GetAI(Creature* pCreature) const
 	{
-		return new mob_batard_drakodonAI(pCreature);
+		return new mob_drakeadon_mongrelAI(pCreature);
 	}
 };
 
 void AddSC_blackwing_descent()
 {
     new mob_nefarian_helper_heroic();
+    new mob_drakonid_chainwielder();
 	new mob_ivoroc();
 	new mob_maimgor();
-	new mob_brule_pourpoint();
-	new mob_pourfendeur_drakonide();
-	new mob_batard_drakodon();
+	// new mob_brule_pourpoint();
+	new mob_drakonid_slayer();
+	new mob_drakeadon_mongrel();
 }

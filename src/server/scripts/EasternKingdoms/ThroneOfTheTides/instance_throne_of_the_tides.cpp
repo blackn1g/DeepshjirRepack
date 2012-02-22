@@ -36,7 +36,13 @@ public:
         uint64 uiMindebenderGhurshaDoor;
         uint64 uiOzumatDoor;
 
+        uint64 uiTentacleRight;
+        uint64 uiTentacleLeft;
+
         uint32 encounter[MAX_ENCOUNTER];
+
+        uint8 isCinematicInProgress;
+        uint32 cinematicTimer;
 
         std::string str_data;
 
@@ -57,6 +63,12 @@ public:
             uiCommanderUlthokDoor = 0;
             uiMindebenderGhurshaDoor = 0;
             uiOzumatDoor = 0;
+
+            uiTentacleRight = 0;
+            uiTentacleLeft = 0;
+
+            isCinematicInProgress = 0;
+            cinematicTimer = 0;
         }
 
         bool IsEncounterInProgress() const
@@ -94,6 +106,8 @@ public:
                 uiMindbenderGhursha = creature->GetGUID();
                 break;
             case BOSS_OZUMAT:
+                /*if(encounter[0] == DONE)
+                creature->AI()->DoAction(ACTION_OZUMATE_PREPARE_NEXT_PHASE);*/
                 uiOzumat = creature->GetGUID();
                 break;
             case NPC_NEPTULON:
@@ -136,6 +150,12 @@ public:
                 uiOzumatDoor = go->GetGUID();
                 HandleGameObject(0, encounter[DATA_MINDEBENDER_GHURSHA] == DONE, go);
                 break;
+            case GO_TENTACLE_RIGHT:
+                uiTentacleRight = go->GetGUID();
+                break;
+            case GO_TENTACLE_LEFT:
+                uiTentacleLeft = go->GetGUID();
+                break;
             }
         }
 
@@ -154,11 +174,17 @@ public:
                         commanderUlthok->CastSpell(commanderUlthok, SPELL_ULTHOK_INTRO, true);
                     }
 
+                    if(Creature* ozumat = instance->GetCreature(uiOzumat))
+                        ozumat->AI()->DoAction(ACTION_OZUMATE_PREPARE_NEXT_PHASE);
+
                     HandleGameObject(uiLadyNazjarDoor, true);
                     HandleGameObject(uiCommanderUlthokDoor, false);
 
                     if(GameObject* corales = instance->GetGameObject(uiCorales))
                         corales->SetPhaseMask(2,true);
+
+                    /*isCinematicInProgress = 1;
+                    cinematicTimer = 15000;*/
 
                 }else if (data == IN_PROGRESS)
                 {
@@ -288,6 +314,31 @@ public:
             } else OUT_LOAD_INST_DATA_FAIL;
 
             OUT_LOAD_INST_DATA_COMPLETE;
+        }
+
+        void Update(uint32 diff)
+        {
+            if(isCinematicInProgress == 0)
+                return;
+
+            /*if (cinematicTimer<= diff)
+            {
+                if(isCinematicInProgress == 1)
+                {
+                    HandleGameObject(uiTentacleRight, true);
+                }
+                else if(isCinematicInProgress == 2)
+                {
+                    HandleGameObject(uiTentacleRight, true);
+                }
+
+                cinematicTimer = 5000;
+                isCinematicInProgress++;
+
+            } else cinematicTimer -= diff;
+
+            if(isCinematicInProgress == 3)
+                isCinematicInProgress = 0;*/
         }
     };
 };
