@@ -197,12 +197,6 @@ public:
             HandleCombatVisual(false);
             DespawnMinions();
             
-            Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
-
-            if (!PlayerList.isEmpty())
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                        i->getSource()->SendCinematicStart(169);
-
             if (instance)
                 instance->SetData(DATA_LADY_NAZJAR, DONE);
         }

@@ -35,6 +35,7 @@ public:
         uint64 uiCommanderUlthokDoor;
         uint64 uiMindebenderGhurshaDoor;
         uint64 uiOzumatDoor;
+        uint64 uiControlSystem;
 
         uint64 uiTentacleRight;
         uint64 uiTentacleLeft;
@@ -63,6 +64,7 @@ public:
             uiCommanderUlthokDoor = 0;
             uiMindebenderGhurshaDoor = 0;
             uiOzumatDoor = 0;
+            uiControlSystem = 0;
 
             uiTentacleRight = 0;
             uiTentacleLeft = 0;
@@ -150,6 +152,9 @@ public:
                 uiOzumatDoor = go->GetGUID();
                 HandleGameObject(0, encounter[DATA_MINDEBENDER_GHURSHA] == DONE, go);
                 break;
+            case GO_CONTROL_SYSTEM:
+                uiControlSystem = go->GetGUID();
+                break;
             case GO_TENTACLE_RIGHT:
                 uiTentacleRight = go->GetGUID();
                 break;
@@ -177,7 +182,10 @@ public:
                     if(Creature* ozumat = instance->GetCreature(uiOzumat))
                         ozumat->AI()->DoAction(ACTION_OZUMAT_PREPARE_EVENT);
 
-                    HandleGameObject(uiLadyNazjarDoor, true);
+                    if(GameObject* controlSystem = instance->GetGameObject(uiControlSystem))
+                        controlSystem->SetPhaseMask(PHASEMASK_NORMAL, true);
+
+                    //HandleGameObject(uiLadyNazjarDoor, true);
                     HandleGameObject(uiCommanderUlthokDoor, false);
 
                     if(GameObject* corales = instance->GetGameObject(uiCorales))

@@ -177,7 +177,30 @@ public:
     };
 };
 
+class go_totd_defense_system : public GameObjectScript
+{
+public:
+    go_totd_defense_system() : GameObjectScript("go_totd_defense_system") { }
+
+    bool OnGossipHello(Player* /*player*/, GameObject* go)
+    {
+        if(InstanceScript* instance = go->GetInstanceScript())
+        {
+            Map::PlayerList const &PlayerList = go->GetMap()->GetPlayers();
+
+            if (!PlayerList.isEmpty())
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                    i->getSource()->SendCinematicStart(169);
+
+            if(GameObject* door = go->FindNearestGameObject(GO_LADY_NAZJAR_DOOR,20.f))
+                instance->HandleGameObject(0, true, door);
+        }
+        return false;
+    }
+};
+
 void AddSC_throne_of_the_tides()
 {
     new mob_lady_nazjar_event();
+    new go_totd_defense_system();
 }
