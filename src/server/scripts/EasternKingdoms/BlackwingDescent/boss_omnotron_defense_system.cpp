@@ -1,11 +1,11 @@
 /*
-* Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+* Copyright (C) 2005 - 2012 MaNGOS <http://www.getmangos.org/>
 *
-* Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+* Copyright (C) 2008 - 2012 TrinityCore <http://www.trinitycore.org/>
 *
 * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
 *
-* Copyright (C) 2011 True Blood <http://www.trueblood-servers.com/>
+* Copyright (C) 2011 - 2012 True Blood <http://www.trueblood-servers.com/>
 * By Asardial
 *
 * Copyright (C) 2012 DeepshjirCataclysm Repack
@@ -49,11 +49,13 @@
 #define SAY_ACTIVATION_ARCANOTRON "Arcanotron unit activated."
 #define SAY_REROUTING_ENERGY "Defense systems obliterated. Powering down...."
 
+#define TRON_PATH 10821150
+
 enum Spells
 {
     // Omnitron
     SPELL_INACTIVE=78726,
-    SPELL_SHUTING_DOWN = 78746,
+    SPELL_SHUTTING_DOWN = 78746,
     SPELL_ACTIVATED = 78740,
 
     // Electron
@@ -122,12 +124,15 @@ enum Actions
     ACTION_DEACTIVATE,
 };
 
-enum DirectAccess
+enum Misc
 {
-    MAGMATRON,
-    ELECTRON,
-    ARCANOTRON,
-    TOXITRON,
+    DATA_IS_FIRST_TRON,
+};
+
+Position const wayPos[2] =
+{
+    {-315.853f, -400.56f, 213.974f,0},
+    {-334.152f, -400.321f, 214.005f,0},
 };
 
 class boss_omnotron : public CreatureScript
@@ -142,7 +147,7 @@ public:
 
     struct boss_omnotronAI : public ScriptedAI
     {
-        boss_omnotronAI(Creature* creature) : ScriptedAI(creature), eventActive(false)
+        boss_omnotronAI(Creature* creature) : ScriptedAI(creature), eventActive(false), intialized(false)
         {
             instance = creature->GetInstanceScript();
 
@@ -152,6 +157,7 @@ public:
 
         InstanceScript* instance;
         EventMap events;
+        bool intialized;
 
         Creature* trons[4];
 
@@ -160,6 +166,21 @@ public:
 
         void UpdateAI(const uint32 diff)
         {
+            if(!intialized)
+            {
+                trons[0] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_MAGMATRON));
+                trons[1] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ELECTRON));
+                trons[2] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ARCANOTRON));
+                trons[3] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_TOXITRON));
+
+                for(uint8 i = 0; i<=3; i++)
+                    if(trons[i] == NULL)
+                        return;
+
+                intialized = true;
+                ResetTrons();
+            }
+
             if(!eventActive)
                 return;
 
@@ -173,12 +194,8 @@ public:
 
                 case EVENT_ACTIVATE_NEXT_CONSTRUCT:
 
-                    if(Creature* tron = ActivateTronSelector())
-                    {
-                        me->MonsterSay("Activate Construct",0,0);
-
-                        tron->AI()->DoAction(ACTION_TRON_ACTIVATE);
-                    }
+                    me->MonsterSay("Activate Construct",0,0);
+                    ActivateNextTron();
 
                     events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 45000);
                     break;
@@ -201,13 +218,6 @@ public:
 
                 eventActive = true;
                 me->MonsterSay("Activated",0,0);
-              
-                trons[MAGMATRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_MAGMATRON));
-                trons[ELECTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ELECTRON));
-                trons[ARCANOTRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ARCANOTRON));
-                trons[TOXITRON] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_TOXITRON));
-
-                activateTron = 1;
 
                 events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 15000);
                 break;
@@ -223,13 +233,10 @@ public:
                     DespawnMinions();
                     events.Reset();
 
+                    ResetTrons();
+
                     if (instance)
                         instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, FAIL);
-
-                    for(uint8 i = 0; i<=3; i++)
-                        if(trons[i])
-                            trons[i]->AI()->DoAction(ACTION_EVENT_FAILED);
-
 
                 }
                 break;
@@ -246,18 +253,53 @@ public:
             }
         }
 
-    private:
-        Creature* ActivateTronSelector()
+        void ResetTrons()
         {
-            Creature* target;
+            for(uint8 i = 0; i<=3; i++)
+                if(trons[i] == NULL)
+                    return;
 
-            target = trons[activateTron];
+            for(uint8 i = 0; i<=3; i++)
+                trons[i]->AI()->SetData(DATA_IS_FIRST_TRON, 0);
 
-            activateTron++;
+            uint8 a = urand(15,25);
+            Creature* tronCache;
+            for(uint8 i = 0; i<=a; i++)
+            {
+                uint8 moveDest = urand(0,3);
+                uint8 moveTarget = urand(0,3);
 
-            return target;
+                tronCache = trons[moveTarget];
+                trons[moveTarget] = trons[moveDest];
+                trons[moveDest] = tronCache;
+            }
+
+            trons[0]->AI()->SetData(DATA_IS_FIRST_TRON, 1);
+
+            for(uint8 i = 0; i<=3; i++)
+                trons[i]->AI()->DoAction(ACTION_EVENT_FAILED);
+        };
+
+        void ActivateNextTron()
+        {
+            for(uint8 i = 0; i<=3; i++)
+                if(trons[i] == NULL)
+                    return;
+
+            // Select next Tron
+            Creature* tronCache;
+
+            tronCache = trons[3];
+            trons[3] = trons[0]; 
+            trons[0] = tronCache;
+
+            // Activate Tron
+            trons[0]->AI()->DoAction(ACTION_TRON_ACTIVATE);
+
+            return;
         }
 
+    private:
         inline void DespawnMinions()
         {
             DespawnCreatures(NPC_POISON_BOMB);
@@ -290,27 +332,38 @@ public:
 
     struct boss_tronsAI : public ScriptedAI
     {
-        boss_tronsAI(Creature* creature) : ScriptedAI(creature), activated(false)
+        boss_tronsAI(Creature* creature) : ScriptedAI(creature), activated(false), isFirstTron(false)
         {
             instance = creature->GetInstanceScript();
 
             creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
             creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
+            creature->AddUnitMovementFlag(MOVEMENTFLAG_WALKING);
+
+            homePosition = creature->GetHomePosition();
         }
 
         InstanceScript* instance;
         EventMap events;
         bool activated;
+        bool isFirstTron;
+        bool isMovingHome;
+        Position homePosition;
 
-        void EnterCombat(Unit * /*who*/)
+        void EnterCombat(Unit * who)
         {
-            if(me->GetEntry() == NPC_TOXITRON)
+            if(isFirstTron)
             {
                 if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
                     omnotron->AI()->DoAction(ACTION_OMNOTRON_START_EVENT);
 
+                //me->GetMotionMaster()->MoveChase(who);
+
                 DoAction(ACTION_TRON_ACTIVATE);
-            }
+
+                me->MonsterSay("Enter Combat and is first tron",0,0);
+            }else
+                me->MonsterSay("Enter Combat",0,0);
         }
 
         void JustDied(Unit* /*Killer*/)
@@ -318,18 +371,46 @@ public:
             me->MonsterYell(SAY_DEATH, 0, 0);
         }
 
-        void JustReachedHome()
+        void MovementInform(uint32 type, uint32 id)
         {
-            if(me->GetEntry() != NPC_TOXITRON || me->isInCombat())
-                DoCast(me,SPELL_SHUTING_DOWN);
-        };
+            if (type != POINT_MOTION_TYPE || id > 2)
+                return;
+
+            me->AddUnitMovementFlag(MOVEMENTFLAG_WALKING);
+
+            switch(id)
+            {
+            case 0:
+                if(!isFirstTron && isMovingHome)
+                {
+                    isMovingHome = false;
+                    me->GetMotionMaster()->MovementExpired(true);
+                    me->GetMotionMaster()->Clear(true);
+
+                    me->SetOrientation(homePosition.GetOrientation());
+                    WorldPacket data;
+                    me->BuildHeartBeatMsg(&data);
+                    me->SendMessageToSet(&data, false);
+                    me->AddAura(SPELL_INACTIVE, me);
+                    //DoCast(me,SPELL_SHUTTING_DOWN);
+
+                    me->MonsterSay("Triggered Home",0,0);
+                }
+                break;
+            case 1: 
+                me->GetMotionMaster()->MovePoint(2, wayPos[1]);
+                break;
+            case 2:
+                me->GetMotionMaster()->MovePoint(1, wayPos[0]);
+                break;
+            }
+
+        }
 
         void Reset()
         {
             if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
                 omnotron->AI()->DoAction(ACTION_OMNOTRON_RESET);
-
-            DoAction(ACTION_EVENT_FAILED);
         };
 
         void DoAction(const int32 action)
@@ -339,11 +420,13 @@ public:
             switch(action)
             {
             case ACTION_TRON_ACTIVATE:
-                me->SetReactState(REACT_AGGRESSIVE);
                 me->RemoveAllAuras();
-                DoZoneInCombat();
-                DoCast(me, SPELL_ACTIVATED);
+                me->MonsterSay("Action: Activate",0,0);
+                me->SetReactState(REACT_AGGRESSIVE);
+                DoZoneInCombat(me);
+                me->AddAura(SPELL_ACTIVATED, me);
                 activated = true;
+                isMovingHome = false;
 
                 // Intialize Events
                 switch(me->GetEntry())
@@ -374,30 +457,34 @@ public:
                     break;
                 }
 
+                return;
                 break;
 
             case ACTION_EVENT_FAILED:
-                if(me->HasAura(SPELL_INACTIVE))
-                    break;
-
-                me->RemoveAllAuras();
-                if(me->GetEntry() != NPC_TOXITRON)
-                { // Electron, Magmatron and Arcanotron
+                me->MonsterSay("Action: Failed",0,0);
+                if(!isFirstTron)
+                { // is not First Tron
                     DoAction(ACTION_DEACTIVATE);
                 }else
-                { // Toxitron
-
+                { // is First Tron
+                    me->SetReactState(REACT_AGGRESSIVE);
+                    me->RemoveAllAuras();
                     me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
+                    me->GetMotionMaster()->MovePoint(1, wayPos[0]);
+                    activated = true;
+                    isMovingHome = false;
                 }
-                activated = false;
                 break;
 
             case ACTION_DEACTIVATE:
-                me->AttackStop();
+                me->MonsterSay("Action: Deactivate",0,0);
                 me->SetReactState(REACT_PASSIVE);
-                me->GetMotionMaster()->MoveTargetedHome();
+                me->AttackStop();
+                me->GetMotionMaster()->MovePoint(0, homePosition);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveAllAuras();
                 activated = false;
+                isMovingHome = true;
                 break;
             }
         }
@@ -407,13 +494,10 @@ public:
             if (!UpdateVictim() || !activated)
                 return;
 
-            if(!me->HasAura(SPELL_ACTIVATED))
+            if(!me->HasAura(SPELL_ACTIVATED) && !isMovingHome)
             {
-                DoCast(me, SPELL_SHUTING_DOWN);
-                me->AttackStop();
-                me->RemoveAllAuras();
-                me->GetMotionMaster()->MoveTargetedHome();
-
+                me->MonsterSay("Deactivate because c has no activate buff",0,0);
+                DoAction(ACTION_DEACTIVATE);
                 return;
             }
 
@@ -497,10 +581,17 @@ public:
                     events.ScheduleEvent(EVENT_ARCANE_ANNIHILATOR, 8000);
                     return;
                 }
-
             }
 
             DoMeleeAttackIfReady();
+        }
+
+        void SetData(uint32 Type, uint32 Data)
+        {
+            if(Type != DATA_IS_FIRST_TRON)
+                return;
+
+            isFirstTron = (Data == 0) ? false : true;
         }
     };
 };

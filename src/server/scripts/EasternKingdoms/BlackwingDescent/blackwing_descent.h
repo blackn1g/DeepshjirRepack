@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+ * Copyright (C) 2005 - 2012 MaNGOS <http://www.getmangos.org/>
  *
- * Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008 - 2012 TrinityCore <http://www.trinitycore.org/>
  *
- * Copyright (C) 2011 ArkCORE <http://www.arkania.net/>
+ * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -48,6 +48,7 @@ enum Creatures
 	NPC_LAVA_PARASITE               = 41806,
 	NPC_PILLAR_OF_FLAME_TRIGGER     = 41843,
 	NPC_BLAZING_BONE_CONSTRUCT      = 49416,
+    NPC_DRAGONID_DRUDGE             = 42362,
 
     // Omnotron Defense System
     // Toxitron
@@ -79,10 +80,10 @@ enum Creatures
 
     // Nefarian
     NPC_ONYXIA                      = 41270,
-    NPC_LORD_VICTOR_NEFARIAN        = 41379,
 
     // Misc
 	NPC_NEFARIAN_HELPER_HEROIC      = 49427,
+    NPC_LORD_VICTOR_NEFARIAN        = 41379,
 };
 
 enum Gameobjects

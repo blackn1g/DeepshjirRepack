@@ -5,7 +5,7 @@
 *
 * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
 *
-* Copyright (C) 2011 True Blood <http://www.trueblood-servers.com/>
+* Copyright (C) 2011 - 2012 True Blood <http://www.trueblood-servers.com/>
 * By JeanClaude
 *
 * Copyright (C) 2012 DeepshjirCataclysm Repack

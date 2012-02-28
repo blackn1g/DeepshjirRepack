@@ -38,6 +38,7 @@ public:
 
         // Magmaw
         uint64 uiMagmaw;
+        uint64 uiMagmawsHead;
 
         // Omnotron Defense System
         uint64 uiOmnotron;
@@ -63,6 +64,7 @@ public:
 
         // Misc
         uint32 uiEncounter[MAX_ENCOUNTER];
+        uint64 uiLordVictorNefarian;
 
         // Gobs
         uint64 gobPreBossDoor;
@@ -77,6 +79,7 @@ public:
 
             // Magmaw
             uiMagmaw = 0;
+            uiMagmawsHead = 0;
 
             // Omnotron Defense System
             uiOmnotron = 0;
@@ -99,6 +102,9 @@ public:
             // Nefarian
             uiNefarian = 0;
             uiOnyxia = 0;
+
+            // Misc
+            uiLordVictorNefarian = 0;
 
             // Gobs
             gobPreBossDoor = 0;
@@ -124,6 +130,9 @@ public:
                 // Magmaw
             case BOSS_MAGMAW: 
                 uiMagmaw = creature->GetGUID(); 
+                break;
+            case NPC_MAGMAWS_HEAD: 
+                uiMagmawsHead = creature->GetGUID(); 
                 break;
 
                 // Omnotron Defense System
@@ -171,6 +180,11 @@ public:
             case NPC_ONYXIA: 
                 uiOnyxia = creature->GetGUID(); 
                 break;
+
+                // Misc
+            case NPC_LORD_VICTOR_NEFARIAN: 
+                uiLordVictorNefarian = creature->GetGUID(); 
+                break;
             }
         }
 
@@ -194,7 +208,7 @@ public:
 
             case GOB_ONYXIA_PLATFORM:
                 gobOnyxiaPlatform = go->GetGUID();
-                //go->SetPhaseMask(GetData(DATA_ATRAMEDES)==DONE ? 2 : PHASEMASK_NORMAL, true);
+                go->SetPhaseMask(GetData(DATA_ATRAMEDES)==DONE ? 1 : 2, true);
                 break;
             }
         }
@@ -205,6 +219,9 @@ public:
             {
             case BOSS_MAGMAW:
                 return uiMagmaw; 
+                break;
+            case NPC_MAGMAWS_HEAD:
+                return uiMagmawsHead; 
                 break;
 
                 // Omnotron Defense System
@@ -253,9 +270,9 @@ public:
                 return uiOnyxia; 
                 break;
 
-                // Gameobjects
-            case GOB_MALORIAKS_CAULDRON:
-                return gobMaloriaksCauldron;
+                // Misc
+            case NPC_LORD_VICTOR_NEFARIAN:
+                return uiLordVictorNefarian; 
                 break;
 
             }
@@ -289,10 +306,10 @@ public:
                     HandleGameObject(gobAtramedesBossDoor, (GetData(DATA_MALORIAK)==DONE) && (GetData(DATA_CHIMAERON)==DONE));
                     break;
 
-                /*case DATA_ATRAMEDES:
+                case DATA_ATRAMEDES:
                     if(GameObject* onyxiaPlatform = instance->GetGameObject(gobOnyxiaPlatform))
                         onyxiaPlatform->SetPhaseMask(PHASEMASK_NORMAL, true);
-                    break;*/
+                    break;
                 }
             }
         }

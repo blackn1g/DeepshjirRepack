@@ -1,7 +1,7 @@
 /*
-* Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+* Copyright (C) 2005 - 2012 MaNGOS <http://www.getmangos.org/>
 *
-* Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+* Copyright (C) 2008 - 2012 TrinityCore <http://www.trinitycore.org/>
 *
 * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
 *
@@ -23,8 +23,8 @@
 */
 
 /*
-*This script is arround 93% complete...
-*Hardmode and Double Attack Spellscript must be written.
+* This script is arround 93% complete...
+* Hardmode and Double Attack Spellscript must be rewritten.
 */
 
 #include "ScriptPCH.h"
@@ -35,6 +35,7 @@ enum Events
     EVENT_DOUBLE_ATTACK = 1,
     EVENT_CAUSTIC_SLIME,
     EVENT_MASSACRE,
+    EVENT_SEC_MASSACRE,
     EVENT_BREAK,
 };
 
@@ -55,6 +56,7 @@ enum Spells
     SPELL_BREAK                         = 82881,
 
     SPELL_MORTALITY                     = 82934,
+    SPELL_MORTALITY_RAID_DEBUFF         = 82890,
 
     // Bile O Tron
     SPELL_FINKLES_MIXTURE               = 82705,
@@ -105,8 +107,9 @@ public:
 
             me->RemoveAura(SPELL_DOUBLE_ATTACK);
             me->RemoveAura(SPELL_MORTALITY);
+            me->RemoveAura(SPELL_MORTALITY_RAID_DEBUFF);
             me->RemoveAura(SPELL_MOCKING_SHADOWS);
-
+            
             if(Creature* finkle_einhorn = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_FINKLE_EINHORN)))
                 finkle_einhorn->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
@@ -139,6 +142,7 @@ public:
                 phase = 2;
 
                 DoCast(me, SPELL_MORTALITY);
+                DoCastAOE(SPELL_MORTALITY_RAID_DEBUFF);
 
                 events.CancelEvent(EVENT_MASSACRE);
                 events.CancelEvent(EVENT_BREAK);
@@ -160,7 +164,13 @@ public:
                     if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
                         bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_SYSTEM_FAILURE);
 
+                    events.ScheduleEvent(EVENT_SEC_MASSACRE, 11000);
                     events.ScheduleEvent(EVENT_MASSACRE, urand(90000,95000));
+                    break;
+
+                case EVENT_SEC_MASSACRE:
+                    DoCastVictim(SPELL_MASSACRE);
+                    DoCast(me,SPELL_FEUD);
                     break;
 
                 case EVENT_DOUBLE_ATTACK:

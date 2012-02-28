@@ -1,7 +1,7 @@
 /*
-* Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+* Copyright (C) 2005 - 2012 MaNGOS <http://www.getmangos.org/>
 *
-* Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+* Copyright (C) 2008 - 2012 TrinityCore <http://www.trinitycore.org/>
 *
 * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
 *
@@ -35,13 +35,13 @@ enum Spells
     SPELL_ARCANE_STORM              = 77896,
 
     // Red Phase
-    SPELL_DRINK_RED_BOTTLE          = 88699,
+    SPELL_THROW_RED_BOTTLE          = 77925, // Or 77928?
 
     SPELL_SCORCHING_BLAST           = 92970,
     SPELL_CONSUMING_FLAMES          = 92973,
 
     // Blue Phase
-    SPELL_DRINK_BLUE_BOTTLE         = 88700,
+    SPELL_THROW_BLUE_BOTTLE         = 77932, // Or 77934?
 
     SPELL_BITING_CHILL              = 77760,
 
@@ -49,12 +49,12 @@ enum Spells
     SPELL_FLASH_FREEZE_SUMMON       = 77711,
 
     // Green Phase
-    SPELL_THROW_GREEN_BOTTLE        = 77937,
+    SPELL_THROW_GREEN_BOTTLE        = 77937, // Or 77938?
     SPELL_DEBILITATING_SLIME        = 92910,
     SPELL_DEBILITATING_SLIME_VISUAL = 77602, //(Dummy Effect)
 
     // Black Phase
-    SPELL_DRINK_BLACK_BOTTLE        = 92828,
+    SPELL_THROW_BLACK_BOTTLE        = 92831, // Or 92828?
 
     // Final Phase
     SPELL_ACID_NOVA                 = 93013,
@@ -83,7 +83,7 @@ enum Events
     EVENT_FLASH_FREEZE,
 };
 
-Position const CauldronPositions[1] =
+Position const CauldronPosition[1] =
 {
     {-111.704559f, -477.060272f, 73.456284f, 6.216876f},
 };
@@ -185,11 +185,11 @@ public:
                     switch(phase)
                     {
                     case PHASE_RED:
-                        DoCastAOE(SPELL_DRINK_RED_BOTTLE);
+                        DoCastAOE(SPELL_THROW_RED_BOTTLE);
                         break;
 
                     case PHASE_BLUE:
-                        DoCastAOE(SPELL_DRINK_BLUE_BOTTLE);
+                        DoCastAOE(SPELL_THROW_BLUE_BOTTLE);
                         break;
 
                     case PHASE_GREEN:
@@ -197,7 +197,7 @@ public:
                         break;
 
                     case PHASE_BLACK:
-                        DoCastAOE(SPELL_DRINK_BLACK_BOTTLE);
+                        DoCastAOE(SPELL_THROW_BLACK_BOTTLE);
                         break;
                     }
                     events.ScheduleEvent(EVENT_WAIT_SWITCH_PHASE, 1000);
@@ -374,12 +374,12 @@ public:
                 withoutGreenPhase = 0;
             }              
 
-            // Debug
-            phase = PHASE_BLUE;
+            // Debug: (here you can define a spezified phase for debugging)
+            // phase = PHASE_BLUE;
 
             me->SetReactState(REACT_PASSIVE);
             me->AttackStop();
-            me->GetMotionMaster()->MovePoint(1, CauldronPositions[0]);
+            me->GetMotionMaster()->MovePoint(1, CauldronPosition[0]);
         }
 
         inline void DespawnMinions()
@@ -435,44 +435,6 @@ public:
     };
 };
 
-class spell_arcane_storm_maloriak : public SpellScriptLoader
-{
-public:
-    spell_arcane_storm_maloriak() : SpellScriptLoader("spell_arcane_storm_maloriak") { }
-
-    class spell_arcane_storm_maloriak_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_arcane_storm_maloriak_SpellScript);
-
-        bool Validate(SpellEntry const* /*spell*/)
-        {
-            return true;
-        }
-
-        void HandleDamage(SpellEffIndex effIndex)
-        {
-            PreventHitDefaultEffect(effIndex);
-            Unit* caster = GetCaster();
-            Unit* target = GetHitUnit();
-            
-            if (caster && target)
-            {
-                caster->CastSpell(target, 77908, true);
-            }
-        }
-
-        void Register()
-        {
-            OnEffect += SpellEffectFn(spell_arcane_storm_maloriak_SpellScript::HandleDamage, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
-        }
-    };
-
-    SpellScript* GetSpellScript() const
-    {
-        return new spell_arcane_storm_maloriak_SpellScript();
-    }
-};
-
 class spell_release_abberations : public SpellScriptLoader
 {
 public:
@@ -487,7 +449,7 @@ public:
             return true;
         }
 
-        void HandleDummy(SpellEffIndex effIndex)
+        void HandleDummy(SpellEffIndex /*effIndex*/)
         {
             if(Unit* caster = GetCaster())
                 caster->MonsterYell("Hi",0,0);
@@ -545,7 +507,6 @@ void AddSC_boss_maloriak()
 {
     new boss_maloriak();
     new mob_flash_freeze_maloriak();
-    //new spell_arcane_storm_maloriak();
     new spell_release_abberations();
     new spell_release_all_abberations();
 }
