@@ -1,5 +1,12 @@
 /*
+* Copyright (C) 2005 - 2011 MaNGOS <http://www.getmangos.org/>
+*
+* Copyright (C) 2008 - 2011 TrinityCore <http://www.trinitycore.org/>
+*
 * Copyright (C) 2011 - 2012 ArkCORE <http://www.arkania.net/>
+*
+* Copyright (C) 2012 DeepshjirCataclysm Repack
+* By Naios
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -14,11 +21,6 @@
 * You should have received a copy of the GNU General Public License along
 * with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-
-/**********
-* Script Coded by Naios (2012)
-* Script is 100% Complete (or less)
-**********/
 
 #include "ScriptPCH.h"
 #include "throne_of_the_four_winds.h"
@@ -106,7 +108,10 @@ public:
 
                 // if we use the motion master only to relocate the player
                 // it will cause bugs
-                who->SetPosition(SlipstreamPositions[SlipstreamPosition],false);
+                if (who->GetOrientation() != SlipstreamPositions[SlipstreamPosition].GetOrientation())
+				    who->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
+
+				me->GetMap()->PlayerRelocation(who->ToPlayer(),SlipstreamPositions[SlipstreamPosition].GetPositionX(),SlipstreamPositions[SlipstreamPosition].GetPositionY(),SlipstreamPositions[SlipstreamPosition].GetPositionZ(), SlipstreamPositions[SlipstreamPosition].GetOrientation());
 
                 who->GetMotionMaster()->MoveJump(SlipstreamPositions[SlipstreamPosition].GetPositionX(),SlipstreamPositions[SlipstreamPosition].GetPositionY(),198.458481f,1,6);
             }
