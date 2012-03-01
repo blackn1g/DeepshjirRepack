@@ -26,9 +26,6 @@
 */
 
 #include "ScriptPCH.h"
-#include "ScriptedCreature.h"
-#include "SpellScript.h"
-#include "SpellAuraEffects.h"
 
 #include "blackwing_descent.h"
 
@@ -47,9 +44,7 @@
 #define SAY_ACTIVATION_MAGMATRON "Magmatron unit activated."
 #define SAY_ACTIVATION_ELECTRON "Electron unit activated."
 #define SAY_ACTIVATION_ARCANOTRON "Arcanotron unit activated."
-#define SAY_REROUTING_ENERGY "Defense systems obliterated. Powering down...."
-
-#define TRON_PATH 10821150
+#define SAY_REROUTING_ENERGY "Defense systems obliterated. P    owering down...."
 
 enum Spells
 {
@@ -151,9 +146,6 @@ public:
         boss_omnotronAI(Creature* creature) : ScriptedAI(creature), eventActive(false), intialized(false)
         {
             instance = creature->GetInstanceScript();
-            //creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
-            creature->SetReactState(REACT_PASSIVE);
-            creature->setFaction(16);
         }
 
         InstanceScript* instance;
@@ -205,8 +197,6 @@ public:
                     for(uint8 i = 0; i<=3; i++)
                         trons[i]->SetHealth(me->GetHealth());
 
-                    me->MonsterSay("Updated",0,0);
-
                     events.ScheduleEvent(EVENT_UPDATE_HEALTH, 1000);
                     break;
 
@@ -224,9 +214,6 @@ public:
             case ACTION_OMNOTRON_START_EVENT:
                 // Start Encounter
 
-                /*if(isEncounterDone)
-                    return;*/
-
                 if (instance)
                     instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, IN_PROGRESS);
 
@@ -235,8 +222,7 @@ public:
                 if(me->GetMap()->IsHeroic())
                     me->SummonCreature(NPC_NEFARIAN_HELPER_HEROIC,-302.121f, -349.35f, 220.48f, 4.682203f,TEMPSUMMON_MANUAL_DESPAWN);
 
-                me->MonsterSay("Event Scheduled",0,0);
-                events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 15000);
+                events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 45000);
                 events.ScheduleEvent(EVENT_UPDATE_HEALTH, 1000);
                 break;
 
@@ -329,11 +315,13 @@ public:
                     return;
 
             // Select next Tron
-            Creature* tronCache;
+            Creature* tronCache = trons[0];
 
-            tronCache = trons[3];
-            trons[3] = trons[0]; 
-            trons[0] = tronCache;
+            // Push tron list one step to first place
+            for(uint8 i = 1; i<=3; i++)
+                if(trons[i-1] = trons[i])
+
+            trons[3] = tronCache;
 
             // Activate Tron
             trons[0]->AI()->DoAction(ACTION_TRON_ACTIVATE);
@@ -457,6 +445,7 @@ public:
             {
             case ACTION_TRON_ACTIVATE:
                 me->RemoveAllAuras();
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                 me->SetReactState(REACT_AGGRESSIVE);
                 DoZoneInCombat(me);
                 me->AddAura(SPELL_ACTIVATED, me);
@@ -624,6 +613,8 @@ public:
         {
             if(Type != DATA_IS_FIRST_TRON)
                 return;
+
+            me->SetFullHealth();
 
             isFirstTron = (Data == 0) ? false : true;
         }
