@@ -63,9 +63,6 @@ enum Spells
     SPELL_FINKLES_MIXTURE_VISUAL        = 91106,
     SPELL_SYSTEM_FALURE                 = 88853,
     SPELL_REROUTE_POWER                 = 88861,
-
-    // HC: Nefarian
-    SPELL_MOCKING_SHADOWS               = 91307,
 };
 
 Position const BilePositions[6] =
@@ -108,7 +105,6 @@ public:
             me->RemoveAura(SPELL_DOUBLE_ATTACK);
             me->RemoveAura(SPELL_MORTALITY);
             me->RemoveAura(SPELL_MORTALITY_RAID_DEBUFF);
-            me->RemoveAura(SPELL_MOCKING_SHADOWS);
             
             if(Creature* finkle_einhorn = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_FINKLE_EINHORN)))
                 finkle_einhorn->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -116,13 +112,16 @@ public:
             if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
                 bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_RESET);
 
+            if(Creature* nefarianHelperheroic = me->FindNearestCreature(NPC_NEFARIAN_HELPER_HEROIC,50.0f,true))
+                nefarianHelperheroic->ForcedDespawn();
+
             _Reset();
         }
 
         void EnterCombat(Unit* /*who*/)
         {
-            if(me->GetMap()->IsHeroic())
-                DoCast(me, SPELL_MOCKING_SHADOWS);
+           if(me->GetMap()->IsHeroic())
+               me->SummonCreature(NPC_NEFARIAN_HELPER_HEROIC,-115.5546f, 45.403f, 79.078f, 4.57f ,TEMPSUMMON_MANUAL_DESPAWN);
 
             events.ScheduleEvent(EVENT_MASSACRE, urand(30000,35000));
             events.ScheduleEvent(EVENT_DOUBLE_ATTACK, urand(13000,15000));
@@ -161,15 +160,14 @@ public:
                     DoCastVictim(SPELL_MASSACRE);
                     DoCast(me,SPELL_FEUD);
 
-                    if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
-                        bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_SYSTEM_FAILURE);
+                    if(urand(0,2) == 0)
+                        if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
+                        {
+                            bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_SYSTEM_FAILURE);
+                            events.ScheduleEvent(EVENT_MASSACRE, 45000);
+                        }else
+                            events.ScheduleEvent(EVENT_MASSACRE, 27000);
 
-                    events.ScheduleEvent(EVENT_SEC_MASSACRE, 11000);
-                    events.ScheduleEvent(EVENT_MASSACRE, urand(90000,95000));
-                    break;
-
-                case EVENT_SEC_MASSACRE:
-                    DoCastVictim(SPELL_MASSACRE);
                     DoCast(me,SPELL_FEUD);
                     break;
 
@@ -212,6 +210,9 @@ public:
                 bile_o_tron->RemoveAllAuras();
                 bile_o_tron->GetMotionMaster()->MoveIdle();
             }
+
+            if(Creature* nefarianHelperheroic = me->FindNearestCreature(NPC_NEFARIAN_HELPER_HEROIC,50.0f,true))
+                nefarianHelperheroic->ForcedDespawn();
 
             _JustDied();
         }

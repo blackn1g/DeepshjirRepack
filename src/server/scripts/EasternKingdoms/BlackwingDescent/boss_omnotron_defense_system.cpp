@@ -93,6 +93,7 @@ enum Events
 
     // Omnotron
     EVENT_ACTIVATE_NEXT_CONSTRUCT,
+    EVENT_UPDATE_HEALTH,
 
     // Magmatron
     EVENT_ACQUIRING_TARGET,
@@ -150,14 +151,15 @@ public:
         boss_omnotronAI(Creature* creature) : ScriptedAI(creature), eventActive(false), intialized(false)
         {
             instance = creature->GetInstanceScript();
-
-            //for(uint8 i = 0; i<=3; i++)
-            //    trons[i] = NULL;
+            //creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+            creature->SetReactState(REACT_PASSIVE);
+            creature->setFaction(16);
         }
 
         InstanceScript* instance;
         EventMap events;
         bool intialized;
+        bool isEncounterDone;
 
         Creature* trons[4];
 
@@ -177,33 +179,42 @@ public:
                     if(trons[i] == NULL)
                         return;
 
+                me->SetMaxHealth(trons[0]->GetMaxHealth());
+
+                eventActive = true;
                 intialized = true;
-                ResetTrons();
-            }
-
-            if(!eventActive)
-                return;
-
+                DoAction(ACTION_OMNOTRON_RESET);
+            }else
+            {
+            
+            //me->MonsterSay("AI",0,0);
             events.Update(diff);
 
             while (uint32 eventId = events.ExecuteEvent())
             {
-
                 switch (eventId)
                 {
 
                 case EVENT_ACTIVATE_NEXT_CONSTRUCT:
-
-                    me->MonsterSay("Activate Construct",0,0);
                     ActivateNextTron();
 
                     events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 45000);
+                    break;
+
+                case EVENT_UPDATE_HEALTH:
+                    for(uint8 i = 0; i<=3; i++)
+                        trons[i]->SetHealth(me->GetHealth());
+
+                    me->MonsterSay("Updated",0,0);
+
+                    events.ScheduleEvent(EVENT_UPDATE_HEALTH, 1000);
                     break;
 
                 default:
                     break;
                 }
             }		
+            }
         }
 
         void DoAction(const int32 action)
@@ -213,13 +224,20 @@ public:
             case ACTION_OMNOTRON_START_EVENT:
                 // Start Encounter
 
+                /*if(isEncounterDone)
+                    return;*/
+
                 if (instance)
                     instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, IN_PROGRESS);
 
                 eventActive = true;
-                me->MonsterSay("Activated",0,0);
 
+                if(me->GetMap()->IsHeroic())
+                    me->SummonCreature(NPC_NEFARIAN_HELPER_HEROIC,-302.121f, -349.35f, 220.48f, 4.682203f,TEMPSUMMON_MANUAL_DESPAWN);
+
+                me->MonsterSay("Event Scheduled",0,0);
                 events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 15000);
+                events.ScheduleEvent(EVENT_UPDATE_HEALTH, 1000);
                 break;
 
             case ACTION_OMNOTRON_RESET:
@@ -227,9 +245,9 @@ public:
 
                 if(eventActive)
                 {
+                    me->SetFullHealth();
                     eventActive = false;
 
-                    me->MonsterSay("Reset",0,0);
                     DespawnMinions();
                     events.Reset();
 
@@ -237,18 +255,28 @@ public:
 
                     if (instance)
                         instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, FAIL);
-
                 }
                 break;
 
             case ACTION_OMNNOTRON_EVENT_FINISHED:
 
-                me->MonsterSay("Finished",0,0);
+                if(isEncounterDone)
+                    return;
+                else
+                    isEncounterDone = true;
+
+                DespawnMinions();
+
+                for(uint8 i = 0; i<=3; i++)
+                    trons[i]->setDeathState(DEAD);
 
                 if (instance)
                     instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, DONE);
 
                 eventActive = false;
+                break;
+
+            default:
                 break;
             }
         }
@@ -274,6 +302,20 @@ public:
                 trons[moveDest] = tronCache;
             }
 
+            /*
+            // ## DEBUG ##
+
+            Creature* tronCache;
+            uint8 moveDest = 3;
+            uint8 moveTarget = 0;
+
+            tronCache = trons[moveTarget];
+            trons[moveTarget] = trons[moveDest];
+            trons[moveDest] = tronCache;
+
+            // ## END DEBUG ##
+            */
+
             trons[0]->AI()->SetData(DATA_IS_FIRST_TRON, 1);
 
             for(uint8 i = 0; i<=3; i++)
@@ -295,7 +337,6 @@ public:
 
             // Activate Tron
             trons[0]->AI()->DoAction(ACTION_TRON_ACTIVATE);
-
             return;
         }
 
@@ -304,6 +345,7 @@ public:
         {
             DespawnCreatures(NPC_POISON_BOMB);
             DespawnCreatures(NPC_POISON_CLOUD);
+            DespawnCreatures(NPC_NEFARIAN_HELPER_HEROIC);
         }
 
         void DespawnCreatures(uint32 entry)
@@ -349,6 +391,7 @@ public:
         bool isFirstTron;
         bool isMovingHome;
         Position homePosition;
+        Creature* omnotron;
 
         void EnterCombat(Unit * who)
         {
@@ -357,13 +400,8 @@ public:
                 if (Creature* omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON)))
                     omnotron->AI()->DoAction(ACTION_OMNOTRON_START_EVENT);
 
-                //me->GetMotionMaster()->MoveChase(who);
-
                 DoAction(ACTION_TRON_ACTIVATE);
-
-                me->MonsterSay("Enter Combat and is first tron",0,0);
-            }else
-                me->MonsterSay("Enter Combat",0,0);
+            }
         }
 
         void JustDied(Unit* /*Killer*/)
@@ -384,17 +422,15 @@ public:
                 if(!isFirstTron && isMovingHome)
                 {
                     isMovingHome = false;
-                    me->GetMotionMaster()->MovementExpired(true);
-                    me->GetMotionMaster()->Clear(true);
-
+                    // me->GetMotionMaster()->MovementExpired(true);
+                    // me->GetMotionMaster()->Clear(true);
+                    me->GetMotionMaster()->MoveTargetedHome();
                     me->SetOrientation(homePosition.GetOrientation());
                     WorldPacket data;
                     me->BuildHeartBeatMsg(&data);
                     me->SendMessageToSet(&data, false);
                     me->AddAura(SPELL_INACTIVE, me);
                     //DoCast(me,SPELL_SHUTTING_DOWN);
-
-                    me->MonsterSay("Triggered Home",0,0);
                 }
                 break;
             case 1: 
@@ -421,12 +457,13 @@ public:
             {
             case ACTION_TRON_ACTIVATE:
                 me->RemoveAllAuras();
-                me->MonsterSay("Action: Activate",0,0);
                 me->SetReactState(REACT_AGGRESSIVE);
                 DoZoneInCombat(me);
                 me->AddAura(SPELL_ACTIVATED, me);
                 activated = true;
                 isMovingHome = false;
+
+                omnotron = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_OMNOTRON));
 
                 // Intialize Events
                 switch(me->GetEntry())
@@ -461,7 +498,6 @@ public:
                 break;
 
             case ACTION_EVENT_FAILED:
-                me->MonsterSay("Action: Failed",0,0);
                 if(!isFirstTron)
                 { // is not First Tron
                     DoAction(ACTION_DEACTIVATE);
@@ -469,7 +505,7 @@ public:
                 { // is First Tron
                     me->SetReactState(REACT_AGGRESSIVE);
                     me->RemoveAllAuras();
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                     me->GetMotionMaster()->MovePoint(1, wayPos[0]);
                     activated = true;
                     isMovingHome = false;
@@ -477,12 +513,11 @@ public:
                 break;
 
             case ACTION_DEACTIVATE:
-                me->MonsterSay("Action: Deactivate",0,0);
                 me->SetReactState(REACT_PASSIVE);
                 me->AttackStop();
-                me->GetMotionMaster()->MovePoint(0, homePosition);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE || UNIT_FLAG_NON_ATTACKABLE);
                 me->RemoveAllAuras();
+                me->GetMotionMaster()->MovePoint(0, homePosition);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                 activated = false;
                 isMovingHome = true;
                 break;
@@ -496,7 +531,6 @@ public:
 
             if(!me->HasAura(SPELL_ACTIVATED) && !isMovingHome)
             {
-                me->MonsterSay("Deactivate because c has no activate buff",0,0);
                 DoAction(ACTION_DEACTIVATE);
                 return;
             }
@@ -592,6 +626,18 @@ public:
                 return;
 
             isFirstTron = (Data == 0) ? false : true;
+        }
+
+        void DamageTaken(Unit* /*who*/, uint32& damage)
+        {
+            if(omnotron)
+                if(omnotron->GetHealth() - damage > 1)
+                    omnotron->SetHealth(omnotron->GetHealth()-damage);
+                else
+                {
+                    damage = 0;
+                    omnotron->AI()->DoAction(ACTION_OMNNOTRON_EVENT_FINISHED);
+                }
         }
     };
 };

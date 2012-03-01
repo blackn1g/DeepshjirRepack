@@ -75,13 +75,16 @@ enum Spells
 {
     // Nefarian helper for:
     // Magmaw
-    SPELL_BLAZING_INFERNO = 92190,
-    SPELL_SHADOWFLAME_BARRAGE = 94121,
+    SPELL_BLAZING_INFERNO               = 92190,
+    SPELL_SHADOWFLAME_BARRAGE           = 94121,
 
     // Omnotron
     SPELL_GRIP_OF_DEATH = 91849,
     SPELL_ENCASING_SHADOWS = 92023,
-    SPELL_OVERCHARGED_POWER_GENERATOR = 91857,
+    SPELL_OVERCHARGED_POWER_GENERATOR   = 91857,
+
+    // Chimaeron
+    SPELL_MOCKING_SHADOWS               = 91307,
 };
 
 enum NefarianEvents
@@ -115,11 +118,9 @@ public:
 
         void Reset()
         {
-            me->SetFlying(true);
-            SpecialPhaseSwitchActive = false;
             me->SetReactState(REACT_PASSIVE);
-            me->SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_NON_ATTACKABLE);
-
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            SpecialPhaseSwitchActive = false;
             events.Reset();
         }
 
@@ -133,12 +134,14 @@ public:
             {
             case BOSS_MAGMAW:
                 events.ScheduleEvent(EVENT_BLAZING_INFERNO, 5000);
+                me->SetFlying(true);
                 break;
 
             case BOSS_OMNOTRON:
                 events.ScheduleEvent(EVENT_GRIP_ZONE, 40000);
                 events.ScheduleEvent(EVENT_ENCASING_SHADOWS, 100000);
                 events.ScheduleEvent(EVENT_OVERCHARGED, 40000);
+                me->SetDisplayId(32440);
                 break;
 
             case BOSS_ATRAMEDES:
@@ -148,6 +151,8 @@ public:
                 break;
 
             case BOSS_CHIMAERON:
+                me->SetDisplayId(32440);
+                DoCast(me, SPELL_MOCKING_SHADOWS, true);
                 break;
 
             default:
@@ -233,41 +238,41 @@ public:
         }
 
         InstanceScript* instance;
-		EventMap events;
-		
+        EventMap events;
+
         void Reset()
-		{
-			events.Reset();
-		}
+        {
+            events.Reset();
+        }
 
         void EnterCombat(Unit* /*who*/)
-		{
-			me->GetMotionMaster()->MoveTargetedHome();
-			
-			//events.ScheduleEvent(EVENT_TEST, urand(10000,12000));
-		}
+        {
+            me->GetMotionMaster()->MoveTargetedHome();
+
+            //events.ScheduleEvent(EVENT_TEST, urand(10000,12000));
+        }
 
         void UpdateAI(const uint32 diff)
-		{
-			if (!UpdateVictim() || me->HasUnitState(UNIT_STAT_CASTING))
-				return;
-			
-			events.Update(diff);
+        {
+            if (!UpdateVictim() || me->HasUnitState(UNIT_STAT_CASTING))
+                return;
 
-			while (uint32 eventId = events.ExecuteEvent())
-			{
-				/*switch (eventId)
-				{
+            events.Update(diff);
 
-				case EVENT_TEST:
-					DoCastVictim(SPELL_ENFEEBLING_BLOW);
-					events.ScheduleEvent(EVENT_ENFEEBLING_BLOW, urand(19000,24000));
-					break;
-				
-				default:
-					break;
-				}*/
-			}		
+            while (uint32 eventId = events.ExecuteEvent())
+            {
+                /*switch (eventId)
+                {
+
+                case EVENT_TEST:
+                DoCastVictim(SPELL_ENFEEBLING_BLOW);
+                events.ScheduleEvent(EVENT_ENFEEBLING_BLOW, urand(19000,24000));
+                break;
+
+                default:
+                break;
+                }*/
+            }		
 
             DoMeleeAttackIfReady();
         }
@@ -279,50 +284,50 @@ public:
 *********/
 #define spell_malediction_de_guerison 80295 // Malédiction_de_guérison
 #define spell_ombreflamme 80270 // Ombreflamme
- 
+
 class mob_ivoroc: public CreatureScript
 {
- public:
-  mob_ivoroc() : CreatureScript("mob_ivoroc") {}
- 
-struct mob_ivorocAI : public ScriptedAI
-{
-    mob_ivorocAI(Creature *c) : ScriptedAI(c) {}
-           
-    uint32 malediction_de_guerison;
-    uint32 ombreflamme;
-           
-	void Reset()
-	{
-		malediction_de_guerison = 10000;
-		ombreflamme = 13000;
-	}  
- 
-	void UpdateAI(const uint32 diff)
-	{
-        if (malediction_de_guerison<= diff)
-        {
-            DoCast(SelectTarget(SELECT_TARGET_RANDOM,1,100,true), spell_malediction_de_guerison);
-            malediction_de_guerison = 17000;
-        } else malediction_de_guerison-= diff;
-                   
-        if (ombreflamme<= diff)
-        {
-            if(Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                DoCast(pTarget, spell_ombreflamme);
+public:
+    mob_ivoroc() : CreatureScript("mob_ivoroc") {}
 
-            ombreflamme = 15000;
-        } else ombreflamme-= diff;
- 
-		DoMeleeAttackIfReady();
-	}
-};
- 
+    struct mob_ivorocAI : public ScriptedAI
+    {
+        mob_ivorocAI(Creature *c) : ScriptedAI(c) {}
+
+        uint32 malediction_de_guerison;
+        uint32 ombreflamme;
+
+        void Reset()
+        {
+            malediction_de_guerison = 10000;
+            ombreflamme = 13000;
+        }  
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (malediction_de_guerison<= diff)
+            {
+                DoCast(SelectTarget(SELECT_TARGET_RANDOM,1,100,true), spell_malediction_de_guerison);
+                malediction_de_guerison = 17000;
+            } else malediction_de_guerison-= diff;
+
+            if (ombreflamme<= diff)
+            {
+                if(Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    DoCast(pTarget, spell_ombreflamme);
+
+                ombreflamme = 15000;
+            } else ombreflamme-= diff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+
     CreatureAI* GetAI(Creature* pCreature) const
     {
-       return new mob_ivorocAI(pCreature);
+        return new mob_ivorocAI(pCreature);
     }
- 
+
 };
 
 /*********
@@ -332,67 +337,67 @@ struct mob_ivorocAI : public ScriptedAI
 #define spell_enrager 80084 // Enrager
 #define spell_fouette_queue 80130 // Fouette_Queue
 #define spell_ombreflamme 80270 // Ombreflamme
- 
+
 class mob_maimgor: public CreatureScript
 {
 public:
- mob_maimgor() : CreatureScript("mob_maimgor") {}
- 
-struct mob_maimgorAI : public ScriptedAI
-{
-	mob_maimgorAI(Creature *c) : ScriptedAI(c) {}
- 
-	uint32 etreinte_percante;
-	uint32 enrager;
-	uint32 fouette_queue;
-	uint32 ombreflamme;
- 
-	void Reset()
-	{
-		etreinte_percante = 17000;
-        enrager = 46000;
-        fouette_queue = 15000;
-        ombreflamme = 20000;
-	}
- 
-	void UpdateAI(const uint32 diff)
-	{
-		if (etreinte_percante<= diff)
-		{
-			if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, -5.0f, true))
-			DoCast(target, spell_etreinte_percante);
-			etreinte_percante = 17000;
-		} else etreinte_percante-= diff;
- 
-		if (enrager<= diff)
-		{
-			DoCast(me, spell_enrager);
-			enrager = 46000;
-		} else enrager-= diff;
- 
-		if (fouette_queue<= diff)
-		{
-			if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, -2.0f, true))
-			DoCast(target, spell_fouette_queue);
-			fouette_queue = 15000;
-		} else fouette_queue-= diff;
- 
-		if (ombreflamme<= diff)
-		{
-			if (Unit *target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-			DoCast(target, spell_ombreflamme);
-			ombreflamme = 20000;
-		} else ombreflamme-= diff;
- 
-		DoMeleeAttackIfReady();
-	}
-};
+    mob_maimgor() : CreatureScript("mob_maimgor") {}
 
-	CreatureAI* GetAI(Creature* pCreature) const
-	{
-		return new mob_maimgorAI(pCreature);
-	}
- 
+    struct mob_maimgorAI : public ScriptedAI
+    {
+        mob_maimgorAI(Creature *c) : ScriptedAI(c) {}
+
+        uint32 etreinte_percante;
+        uint32 enrager;
+        uint32 fouette_queue;
+        uint32 ombreflamme;
+
+        void Reset()
+        {
+            etreinte_percante = 17000;
+            enrager = 46000;
+            fouette_queue = 15000;
+            ombreflamme = 20000;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (etreinte_percante<= diff)
+            {
+                if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, -5.0f, true))
+                    DoCast(target, spell_etreinte_percante);
+                etreinte_percante = 17000;
+            } else etreinte_percante-= diff;
+
+            if (enrager<= diff)
+            {
+                DoCast(me, spell_enrager);
+                enrager = 46000;
+            } else enrager-= diff;
+
+            if (fouette_queue<= diff)
+            {
+                if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, -2.0f, true))
+                    DoCast(target, spell_fouette_queue);
+                fouette_queue = 15000;
+            } else fouette_queue-= diff;
+
+            if (ombreflamme<= diff)
+            {
+                if (Unit *target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    DoCast(target, spell_ombreflamme);
+                ombreflamme = 20000;
+            } else ombreflamme-= diff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAI* GetAI(Creature* pCreature) const
+    {
+        return new mob_maimgorAI(pCreature);
+    }
+
 };
 
 /*****************
@@ -400,51 +405,51 @@ struct mob_maimgorAI : public ScriptedAI
 ******************/
 #define spell_ombreflamme 80270 // Ombreflamme
 #define spell_rafale_de_flammes 80127 // Rafale_De_Flammes
- 
+
 class mob_brule_pourpoint: public CreatureScript
 {
 public:
- mob_brule_pourpoint() : CreatureScript("mob_brule_pourpoint") {}
- 
-struct mob_brule_pourpointAI : public ScriptedAI
-{
-	mob_brule_pourpointAI(Creature *c) : ScriptedAI(c) {}
- 
-	uint32 ombreflamme;
-	uint32 rafale_de_flammes;
- 
-	void Reset()
-	{
-		ombreflamme = 15000;
-		rafale_de_flammes = 25000;
-	}
+    mob_brule_pourpoint() : CreatureScript("mob_brule_pourpoint") {}
 
-	void UpdateAI(const uint32 diff)
-	{
- 
-		if (ombreflamme<= diff)
-		{
-			if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, -10.0f, true))
-			DoCast(target, spell_ombreflamme);
-			ombreflamme = 15000;
-		} else ombreflamme-= diff;
- 
-		if (rafale_de_flammes<= diff)
-		{
-			if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-			DoCast(pTarget, spell_rafale_de_flammes);
-			rafale_de_flammes = 25000;
-		} else rafale_de_flammes-= diff;
- 
-		DoMeleeAttackIfReady();
-	}
-};
+    struct mob_brule_pourpointAI : public ScriptedAI
+    {
+        mob_brule_pourpointAI(Creature *c) : ScriptedAI(c) {}
 
-	CreatureAI* GetAI(Creature* pCreature) const
-	{
-		return new mob_brule_pourpointAI(pCreature);
-	}
- 
+        uint32 ombreflamme;
+        uint32 rafale_de_flammes;
+
+        void Reset()
+        {
+            ombreflamme = 15000;
+            rafale_de_flammes = 25000;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+
+            if (ombreflamme<= diff)
+            {
+                if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, -10.0f, true))
+                    DoCast(target, spell_ombreflamme);
+                ombreflamme = 15000;
+            } else ombreflamme-= diff;
+
+            if (rafale_de_flammes<= diff)
+            {
+                if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    DoCast(pTarget, spell_rafale_de_flammes);
+                rafale_de_flammes = 25000;
+            } else rafale_de_flammes-= diff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAI* GetAI(Creature* pCreature) const
+    {
+        return new mob_brule_pourpointAI(pCreature);
+    }
+
 };
 
 /***********************
@@ -453,56 +458,56 @@ struct mob_brule_pourpointAI : public ScriptedAI
 #define spell_enchainement 80392 // Enchainement
 #define spell_frappe_mortelle 80390 // Frappe_Mortelle
 #define spell_vague_explosive 80391 // Vague_Explosive
- 
+
 class mob_drakonid_slayer: public CreatureScript
 {
 public:
- mob_drakonid_slayer() : CreatureScript("mob_drakonid_slayer") { }
- 
-struct mob_drakonid_slayerAI : public ScriptedAI
-{
-	mob_drakonid_slayerAI(Creature *c) : ScriptedAI(c) {}
- 
-	uint32 enchainement;
-	uint32 frappe_mortelle;
-	uint32 vague_explosive;
- 
-	void Reset()
-	{
-		enchainement = 15000;
-		frappe_mortelle = 20000;
-		vague_explosive = 50000;
-	}
- 
-	void UpdateAI(const uint32 diff)
-	{
-		if (enchainement<= diff)
-		{
-			DoCast(me->getVictim(), spell_enchainement);
-			enchainement = 15000;
-		} else enchainement -= diff;
- 
-		if (frappe_mortelle<= diff)
-		{
-			DoCast(me->getVictim(), spell_frappe_mortelle);
-			frappe_mortelle = 20000;
-		} else frappe_mortelle -= diff;
- 
-		if (vague_explosive<= diff)
-		{
-			DoCastAOE(spell_vague_explosive);
-			vague_explosive = 50000;
-		} else vague_explosive -= diff;
- 
-		DoMeleeAttackIfReady();
-	}
-};
+    mob_drakonid_slayer() : CreatureScript("mob_drakonid_slayer") { }
 
-	CreatureAI* GetAI(Creature* pCreature) const
-	{
-		return new mob_drakonid_slayerAI(pCreature);
-	}
- 
+    struct mob_drakonid_slayerAI : public ScriptedAI
+    {
+        mob_drakonid_slayerAI(Creature *c) : ScriptedAI(c) {}
+
+        uint32 enchainement;
+        uint32 frappe_mortelle;
+        uint32 vague_explosive;
+
+        void Reset()
+        {
+            enchainement = 15000;
+            frappe_mortelle = 20000;
+            vague_explosive = 50000;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (enchainement<= diff)
+            {
+                DoCast(me->getVictim(), spell_enchainement);
+                enchainement = 15000;
+            } else enchainement -= diff;
+
+            if (frappe_mortelle<= diff)
+            {
+                DoCast(me->getVictim(), spell_frappe_mortelle);
+                frappe_mortelle = 20000;
+            } else frappe_mortelle -= diff;
+
+            if (vague_explosive<= diff)
+            {
+                DoCastAOE(spell_vague_explosive);
+                vague_explosive = 50000;
+            } else vague_explosive -= diff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAI* GetAI(Creature* pCreature) const
+    {
+        return new mob_drakonid_slayerAI(pCreature);
+    }
+
 };
 
 /*****************
@@ -514,89 +519,89 @@ struct mob_drakonid_slayerAI : public ScriptedAI
 #define spell_pouvoir_despece RAND(80371,80372,80370,80368,80369)
 #define spell_trou_de_temps RAND(80329,80330)
 #define spell_la_chair RAND(80341,80332)
- 
+
 class mob_drakeadon_mongrel: public CreatureScript
 {
 public:
- mob_drakeadon_mongrel() : CreatureScript("mob_drakeadon_mongrel") {}
- 
-struct mob_drakeadon_mongrelAI : public ScriptedAI
-{
-	mob_drakeadon_mongrelAI(Creature *c) : ScriptedAI(c) {}
- 
-	uint32 acide_corrosif;
-	uint32 brulure_de_givre;
-	uint32 la_chair;
-	uint32 charge;
-	uint32 pouvoir_despece;
-	uint32 trou_de_temps;
- 
-	void Reset()
-	{
-		acide_corrosif = 20000;
-		brulure_de_givre = 45000;
-		charge = 11000;
-		la_chair = 50000;
-		pouvoir_despece = 30000;
-		trou_de_temps = 35000;
-	}
- 
-	void UpdateAI(const uint32 diff)
-	{
-		if (acide_corrosif <= diff)
-		{
-			DoCast(me->getVictim(), spell_acide_corrosif);
-			acide_corrosif = 20000;
-		} else acide_corrosif -= diff;
- 
-		if (brulure_de_givre <= diff)
-		{
-			DoCastAOE(spell_brulure_de_givre);
-			brulure_de_givre = 45000;
-		} else brulure_de_givre -= diff;
- 
-		if (charge <= diff)
-		{
-			if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-			DoCast(pTarget, spell_charge);
-			charge = 11000;
-		} else charge -= diff;
- 
-		if (la_chair <= diff)
-		{
-			DoCast(me, spell_la_chair);
-			la_chair = 50000;
-		} else la_chair -= diff;
- 
-		if (pouvoir_despece <= diff)
-		{
-			DoCast(me, spell_pouvoir_despece);
-			pouvoir_despece = 30000;
-		} else pouvoir_despece -= diff;
- 
-		if (trou_de_temps <= diff)
-		{
-			DoCast(me, spell_trou_de_temps);
-			trou_de_temps = 35000;
-		} else trou_de_temps -= diff;
- 
-		DoMeleeAttackIfReady();
-	}
-};
+    mob_drakeadon_mongrel() : CreatureScript("mob_drakeadon_mongrel") {}
 
-	CreatureAI* GetAI(Creature* pCreature) const
-	{
-		return new mob_drakeadon_mongrelAI(pCreature);
-	}
+    struct mob_drakeadon_mongrelAI : public ScriptedAI
+    {
+        mob_drakeadon_mongrelAI(Creature *c) : ScriptedAI(c) {}
+
+        uint32 acide_corrosif;
+        uint32 brulure_de_givre;
+        uint32 la_chair;
+        uint32 charge;
+        uint32 pouvoir_despece;
+        uint32 trou_de_temps;
+
+        void Reset()
+        {
+            acide_corrosif = 20000;
+            brulure_de_givre = 45000;
+            charge = 11000;
+            la_chair = 50000;
+            pouvoir_despece = 30000;
+            trou_de_temps = 35000;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (acide_corrosif <= diff)
+            {
+                DoCast(me->getVictim(), spell_acide_corrosif);
+                acide_corrosif = 20000;
+            } else acide_corrosif -= diff;
+
+            if (brulure_de_givre <= diff)
+            {
+                DoCastAOE(spell_brulure_de_givre);
+                brulure_de_givre = 45000;
+            } else brulure_de_givre -= diff;
+
+            if (charge <= diff)
+            {
+                if (Unit *pTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                    DoCast(pTarget, spell_charge);
+                charge = 11000;
+            } else charge -= diff;
+
+            if (la_chair <= diff)
+            {
+                DoCast(me, spell_la_chair);
+                la_chair = 50000;
+            } else la_chair -= diff;
+
+            if (pouvoir_despece <= diff)
+            {
+                DoCast(me, spell_pouvoir_despece);
+                pouvoir_despece = 30000;
+            } else pouvoir_despece -= diff;
+
+            if (trou_de_temps <= diff)
+            {
+                DoCast(me, spell_trou_de_temps);
+                trou_de_temps = 35000;
+            } else trou_de_temps -= diff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAI* GetAI(Creature* pCreature) const
+    {
+        return new mob_drakeadon_mongrelAI(pCreature);
+    }
 };
 
 void AddSC_blackwing_descent()
 {
     new mob_nefarian_helper_heroic();
     new mob_drakonid_chainwielder();
-	new mob_ivoroc();
-	new mob_maimgor();
-	// new mob_brule_pourpoint();
-	new mob_drakonid_slayer();
-	new mob_drakeadon_mongrel();
+    new mob_ivoroc();
+    new mob_maimgor();
+    // new mob_brule_pourpoint();
+    new mob_drakonid_slayer();
+    new mob_drakeadon_mongrel();
 }
