@@ -480,7 +480,6 @@ public:
 			bool apply) const;
 	void HandleAuraModFakeInebriation(AuraApplication const * aurApp,
 			uint8 mode, bool apply) const;
-	void HandleAuraReplaceSpell(AuraApplication const * aurApp, uint8 mode, bool apply) const;
 };
 
 namespace Trinity {
