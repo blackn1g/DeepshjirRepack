@@ -26,7 +26,6 @@
 */
 
 #include "ScriptPCH.h"
-
 #include "blackwing_descent.h"
 
 #define SAY_AGGRO "Hmm... the Omnotron Defense System. Centuries ago these constructs were considered the Dwarves greatest technical achievements. With so many counters to each construct's attacks. I''ll have to rectify these designs for them to provide me any entertainement."
@@ -67,7 +66,7 @@ enum Spells
     SPELL_FLAMETHROWER = 79504,
     SPELL_INCINERATION_SECURITY_MEASURE = 79023,
     // Arcanotron
-    SPELL_POWER_GENERATOR = 79624,
+    SPELL_POWER_GENERATOR = 79626, // little bit hacky but it works :-)
     SPELL_ARCANE_ANNIHILATOR = 79710,
     SPELL_POWER_CONVERSION = 79729,
 
@@ -99,8 +98,8 @@ enum Events
     EVENT_POISON_PROTOCOL,
     EVENT_POISON_SOAKED_SHELL,
     // Electron
-    EVENT_LIGHTNING,
-    EVENT_DISCHARGE,
+    EVENT_LIGHTNING_CONDUCTOR,
+    EVENT_ELECTRICAL_DISCHARGE,
     EVENT_UNSTABLE_SHIELD,
     // Arcanotron
     EVENT_POWER_CONVERSION,
@@ -178,32 +177,31 @@ public:
                 DoAction(ACTION_OMNOTRON_RESET);
             }else
             {
-            
-            //me->MonsterSay("AI",0,0);
-            events.Update(diff);
 
-            while (uint32 eventId = events.ExecuteEvent())
-            {
-                switch (eventId)
+                events.Update(diff);
+
+                while (uint32 eventId = events.ExecuteEvent())
                 {
+                    switch (eventId)
+                    {
 
-                case EVENT_ACTIVATE_NEXT_CONSTRUCT:
-                    ActivateNextTron();
+                    case EVENT_ACTIVATE_NEXT_CONSTRUCT:
+                        ActivateNextTron();
 
-                    events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 45000);
-                    break;
+                        events.ScheduleEvent(EVENT_ACTIVATE_NEXT_CONSTRUCT, 45000);
+                        break;
 
-                case EVENT_UPDATE_HEALTH:
-                    for(uint8 i = 0; i<=3; i++)
-                        trons[i]->SetHealth(me->GetHealth());
+                    case EVENT_UPDATE_HEALTH:
+                        for(uint8 i = 0; i<=3; i++)
+                            trons[i]->SetHealth(me->GetHealth());
 
-                    events.ScheduleEvent(EVENT_UPDATE_HEALTH, 1000);
-                    break;
+                        events.ScheduleEvent(EVENT_UPDATE_HEALTH, 1000);
+                        break;
 
-                default:
-                    break;
-                }
-            }		
+                    default:
+                        break;
+                    }
+                }		
             }
         }
 
@@ -288,20 +286,6 @@ public:
                 trons[moveDest] = tronCache;
             }
 
-            /*
-            // ## DEBUG ##
-
-            Creature* tronCache;
-            uint8 moveDest = 3;
-            uint8 moveTarget = 0;
-
-            tronCache = trons[moveTarget];
-            trons[moveTarget] = trons[moveDest];
-            trons[moveDest] = tronCache;
-
-            // ## END DEBUG ##
-            */
-
             trons[0]->AI()->SetData(DATA_IS_FIRST_TRON, 1);
 
             for(uint8 i = 0; i<=3; i++)
@@ -319,11 +303,11 @@ public:
 
             // Push tron list one step to first place
             for(uint8 i = 1; i<=3; i++)
-                if(trons[i-1] = trons[i])
+                trons[i-1] = trons[i];
 
             trons[3] = tronCache;
 
-            // Activate Tron
+            // Activate first Tron
             trons[0]->AI()->DoAction(ACTION_TRON_ACTIVATE);
             return;
         }
@@ -334,6 +318,7 @@ public:
             DespawnCreatures(NPC_POISON_BOMB);
             DespawnCreatures(NPC_POISON_CLOUD);
             DespawnCreatures(NPC_NEFARIAN_HELPER_HEROIC);
+            DespawnCreatures(NPC_POWER_GENERATOR);
         }
 
         void DespawnCreatures(uint32 entry)
@@ -410,15 +395,12 @@ public:
                 if(!isFirstTron && isMovingHome)
                 {
                     isMovingHome = false;
-                    // me->GetMotionMaster()->MovementExpired(true);
-                    // me->GetMotionMaster()->Clear(true);
-                    me->GetMotionMaster()->MoveTargetedHome();
+                    me->NearTeleportTo(homePosition.GetPositionX(),homePosition.GetPositionY(),homePosition.GetPositionZ(),homePosition.GetOrientation());
                     me->SetOrientation(homePosition.GetOrientation());
+                    me->AddAura(SPELL_INACTIVE, me);
                     WorldPacket data;
                     me->BuildHeartBeatMsg(&data);
                     me->SendMessageToSet(&data, false);
-                    me->AddAura(SPELL_INACTIVE, me);
-                    //DoCast(me,SPELL_SHUTTING_DOWN);
                 }
                 break;
             case 1: 
@@ -465,14 +447,14 @@ public:
                     break;
 
                 case NPC_TOXITRON:
-                    events.ScheduleEvent(EVENT_CHEMICAL_BOMB, 30000);
-                    events.ScheduleEvent(EVENT_POISON_PROTOCOL, 41500);
+                    events.ScheduleEvent(EVENT_CHEMICAL_BOMB, 25000);
+                    events.ScheduleEvent(EVENT_POISON_PROTOCOL, 3800);
                     events.ScheduleEvent(EVENT_POISON_SOAKED_SHELL, 65000);
                     break;
 
                 case NPC_ELECTRON:
-                    events.ScheduleEvent(EVENT_LIGHTNING, 10000);
-                    events.ScheduleEvent(EVENT_DISCHARGE, 25000);
+                    events.ScheduleEvent(EVENT_LIGHTNING_CONDUCTOR, 10000);
+                    events.ScheduleEvent(EVENT_ELECTRICAL_DISCHARGE, 25000);
                     events.ScheduleEvent(EVENT_UNSTABLE_SHIELD, 11500);
                     break;
 
@@ -560,26 +542,26 @@ public:
                     if (Is25ManRaid())
                         for (uint32 i25 = 0; i25 < 15; ++i25)
                             DoCast(me, SPELL_POISON_PROTOCOL+i25);
-                    events.ScheduleEvent(EVENT_POISON_PROTOCOL, 41500);
+                    events.ScheduleEvent(EVENT_POISON_PROTOCOL, 38000);
                     return;
 
                 case EVENT_POISON_SOAKED_SHELL:
                     DoCast(me, SPELL_POISON_SOAKED_SHELL);
                     me->MonsterYell(SAY_SHIELD_POISON, 0, 0);
-                    events.ScheduleEvent(EVENT_POISON_SOAKED_SHELL, 65000);
+                    events.ScheduleEvent(EVENT_POISON_SOAKED_SHELL, 60000);
                     return;
 
                     // Electron
-                case EVENT_LIGHTNING:
+                case EVENT_LIGHTNING_CONDUCTOR:
                     if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                         DoCast(pTarget, SPELL_LIGHTNING_CONDUCTOR);
                     me->MonsterYell(SAY_LIGHTNING, 0, 0);
-                    events.ScheduleEvent(EVENT_LIGHTNING,10000);
+                    events.ScheduleEvent(EVENT_LIGHTNING_CONDUCTOR,10000);
                     return;
-                case EVENT_DISCHARGE:
+                case EVENT_ELECTRICAL_DISCHARGE:
                     if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                         DoCast(pTarget, SPELL_ELECTRICAL_DISCHARGE);
-                    events.ScheduleEvent(EVENT_DISCHARGE, 25000);
+                    events.ScheduleEvent(EVENT_ELECTRICAL_DISCHARGE, 25000);
                     return;
                 case EVENT_UNSTABLE_SHIELD:
                     DoCast(me, SPELL_UNSTABLE_SHIELD);
@@ -594,8 +576,7 @@ public:
                     events.ScheduleEvent(EVENT_POWER_CONVERSION, 60000);
                     return;
                 case EVENT_POWER_GENERATOR:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM,1,100,true))
-                        DoCast(target, SPELL_POWER_GENERATOR);
+                    DoCast(me, SPELL_POWER_GENERATOR, true);
                     events.ScheduleEvent(EVENT_POWER_GENERATOR, 30000);
                     return;
                 case EVENT_ARCANE_ANNIHILATOR:
@@ -630,6 +611,22 @@ public:
                     omnotron->AI()->DoAction(ACTION_OMNNOTRON_EVENT_FINISHED);
                 }
         }
+
+        void JustSummoned(Creature* summon)
+        {
+            summon->setFaction(me->getFaction());
+            summon->SetInCombatWithZone();
+
+            switch(summon->GetEntry())
+            {
+            case NPC_POWER_GENERATOR:
+                summon->SetReactState(REACT_PASSIVE);
+                summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                summon->ForcedDespawn(30000);
+                break;
+            }
+        }
+
     };
 };
 

@@ -59,6 +59,7 @@ enum Creatures
 
     // Arcanotron
     NPC_ARCANOTRON                  = 42166,
+    NPC_POWER_GENERATOR             = 42733,
 
     // Electron
     NPC_ELECTRON                    = 42179,
