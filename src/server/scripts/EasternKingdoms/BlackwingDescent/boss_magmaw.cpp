@@ -65,6 +65,7 @@ enum Spells
 
     SPELL_CUSTOM_STATE_05               = 45799,
     SPELL_COSMETIC_CHAINS               = 65612,
+    SPELL_LAVA_ERRUPT_EMOTE             = 79461,
 
 };
 
@@ -175,17 +176,27 @@ Position const IgnitionPositions[2][21] =
                 InstanceScript* instance;
                 EventMap events;
                 bool isInManglePhase;
+                uint32 emoteTimer;
 
                 void Reset()
                 {
                     events.Reset();
                     isInManglePhase = false;
                     DespawnMinions();
+                    emoteTimer = 20000;
 
                     me->SetReactState(REACT_PASSIVE);
 
-                    if(Unit* head = ObjectAccessor::GetCreature(*me, instance->GetData64(NPC_MAGMAWS_HEAD)))
+                    if(Creature* head = ObjectAccessor::GetCreature(*me, instance->GetData64(NPC_MAGMAWS_HEAD)))
+                    {
+                        if(head->isDead())
+                            head->Respawn();
+
+                        if(!me->GetVehicleKit()->GetPassenger(0))
+                            head->EnterVehicle(me, 0);
+
                         head->GetVehicleKit()->RemoveAllPassengers();
+                    }
 
                     _Reset();
                 }
@@ -203,17 +214,26 @@ Position const IgnitionPositions[2][21] =
                     events.ScheduleEvent(EVENT_MANGLE, 45000);
                     events.ScheduleEvent(EVENT_BERSERK, 600000); // 10 Min
 
-                    /*if(me->GetMap()->IsHeroic())
+                    if(me->GetMap()->IsHeroic())
                     {
                     Creature* nefarian = me->SummonCreature(NPC_NEFARIAN_HELPER_HEROIC, HeroicPositions[0], TEMPSUMMON_MANUAL_DESPAWN);
                     nefarian->AI()->DoZoneInCombat();
-                    }*/
+                    }
 
                     _EnterCombat();
                 }
 
                 void UpdateAI(const uint32 diff)
                 {
+                    if(!me->isInCombat())
+                    	if (emoteTimer <= diff) {
+
+                            DoCast(me, SPELL_LAVA_ERRUPT_EMOTE, true);
+
+        				    emoteTimer = 30000;
+		            	} else
+				            emoteTimer -= diff;
+
                     if (!UpdateVictim())
                         return;
 
@@ -337,6 +357,9 @@ Position const IgnitionPositions[2][21] =
 
                 void JustDied(Unit* /*killer*/)
                 {
+                    if(Creature* head = ObjectAccessor::GetCreature(*me, instance->GetData64(NPC_MAGMAWS_HEAD)))
+                        head->DisappearAndDie();
+
                     DespawnMinions();
                     _JustDied();
                 }

@@ -177,7 +177,6 @@ public:
                 DoAction(ACTION_OMNOTRON_RESET);
             }else
             {
-
                 events.Update(diff);
 
                 while (uint32 eventId = events.ExecuteEvent())
@@ -213,7 +212,7 @@ public:
                 // Start Encounter
 
                 if (instance)
-                    instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, IN_PROGRESS);
+                    instance->SetBossState(DATA_OMNOTRON_DEFENSE_SYSTEM, IN_PROGRESS);
 
                 eventActive = true;
 
@@ -238,25 +237,20 @@ public:
                     ResetTrons();
 
                     if (instance)
-                        instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, FAIL);
+                    instance->SetBossState(DATA_OMNOTRON_DEFENSE_SYSTEM, FAIL);
                 }
                 break;
 
             case ACTION_OMNNOTRON_EVENT_FINISHED:
 
-                if(isEncounterDone)
-                    return;
-                else
-                    isEncounterDone = true;
-
                 DespawnMinions();
 
-                for(uint8 i = 0; i<=3; i++)
-                    trons[i]->setDeathState(DEAD);
-
                 if (instance)
-                    instance->SetData(DATA_OMNOTRON_DEFENSE_SYSTEM, DONE);
+                    instance->SetBossState(DATA_OMNOTRON_DEFENSE_SYSTEM, DONE);
+                
+                instance->SetBossState(DATA_MAGMAW, DONE);
 
+                events.Reset();
                 eventActive = false;
                 break;
 
@@ -603,13 +597,23 @@ public:
         void DamageTaken(Unit* /*who*/, uint32& damage)
         {
             if(omnotron)
-                if(omnotron->GetHealth() - damage > 1)
-                    omnotron->SetHealth(omnotron->GetHealth()-damage);
-                else
+                if(damage >= omnotron->GetHealth())
                 {
-                    damage = 0;
                     omnotron->AI()->DoAction(ACTION_OMNNOTRON_EVENT_FINISHED);
+
+                    Creature* trons[4];
+                    trons[0] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_MAGMATRON));
+                    trons[1] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ELECTRON));
+                    trons[2] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_ARCANOTRON));
+                    trons[3] = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_TOXITRON));
+
+                    for(uint8 i = 0; i<=3; i++)
+                        if(trons[i] != me)
+                            trons[i]->ForcedDespawn();
                 }
+                else
+                    omnotron->SetHealth(omnotron->GetHealth()-damage);
+
         }
 
         void JustSummoned(Creature* summon)

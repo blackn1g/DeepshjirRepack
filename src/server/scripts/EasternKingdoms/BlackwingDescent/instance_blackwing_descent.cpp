@@ -285,34 +285,46 @@ public:
             return Encounter[type];
         }
 
-        void SetData(uint32 Type, uint32 Data)
-        {
-            Encounter[Type] = Data;
+        bool SetBossState(uint32 data, EncounterState state) {
+			if (!InstanceScript::SetBossState(data, state))
+				return false;
 
-            if (Data == DONE)
+            if(state == DONE)
             {
-                RewardValorPoints();
-                SaveToDB();
-
-                switch(Type)
+                switch(data)
                 {
                 case DATA_MAGMAW:
                 case DATA_OMNOTRON_DEFENSE_SYSTEM:
-                    HandleGameObject(gobPreBossDoor, (GetData(DATA_MAGMAW)==DONE) && (GetData(DATA_OMNOTRON_DEFENSE_SYSTEM)==DONE));
+                    HandleGameObject(gobPreBossDoor, GetBossState(DATA_MAGMAW)==DONE && GetBossState(DATA_OMNOTRON_DEFENSE_SYSTEM)==DONE);
                     break;
 
                 case DATA_MALORIAK:
                 case DATA_CHIMAERON:
-                    HandleGameObject(gobAtramedesBossDoor, (GetData(DATA_MALORIAK)==DONE) && (GetData(DATA_CHIMAERON)==DONE));
+                    HandleGameObject(gobAtramedesBossDoor, GetBossState(DATA_MALORIAK)==DONE && GetBossState(DATA_CHIMAERON)==DONE);
                     break;
 
                 case DATA_ATRAMEDES:
                     if(GameObject* onyxiaPlatform = instance->GetGameObject(gobOnyxiaPlatform))
                         onyxiaPlatform->SetPhaseMask(PHASEMASK_NORMAL, true);
                     break;
-                }
+                 }
             }
-        }
+
+			return true;
+		}
+
+            bool CheckRequiredBosses(uint32 bossId, Player const* player = NULL) const
+            {
+                if ((player->GetSession()->GetSecurity() > SEC_GAMEMASTER ))
+                    return true;
+
+                /*switch (bossId)
+                {
+                    
+                }*/
+
+                return true;
+            }
 
         std::string GetSaveData()
         {

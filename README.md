@@ -59,7 +59,8 @@ Why you should not copy-paste my Scripts
 ----------------------------------------
 It happens in the past that some people only copy-pasted my scripts without mention me in their release.
 But i exspect to give me credits.
-
+If you use my scripts to release another repack/or use it for an illigal private server i will shut down this public repo
+and i will develop for the next >months< private.
 
 Credits
 -------
