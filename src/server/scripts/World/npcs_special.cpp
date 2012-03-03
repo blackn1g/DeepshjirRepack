@@ -2153,14 +2153,6 @@ public:
                         pet->CastSpell(pet, MANA_LEECH, true);
         }
 
-        void Reset()
-        {
-            if (me->isSummon())
-                if (Unit* pOwner = me->ToTempSummon()->GetSummoner())
-                    if (Unit* pet = pOwner->GetGuardianPet())
-                        pet->CastSpell(pet, MANA_LEECH, true);
-        }
-
 		void DamageTaken(Unit* /*pKiller*/, uint32 &damage) {
 			if (me->isSummon())
 				if (Unit* pOwner = CAST_SUM(me)->GetSummoner()) {
