@@ -322,7 +322,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater) {
 								"received not found opcode 0x%.4X",
 								packet->GetOpcode());
 					else
-						sLog->outError(
+						sLog->outDebug(LOG_FILTER_NETWORKIO,
 								"SESSION (account: %u, guidlow: %u, char: %s): received not allowed opcode %s (0x%.4X)",
 								GetAccountId(), m_GUIDLow,
 								_player ? _player->GetName() : "<none>",
@@ -340,7 +340,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater) {
 					break;
 				}
 			} catch (ByteBufferException &) {
-				sLog->outError(
+				sLog->outDebug(LOG_FILTER_NETWORKIO,
 						"WorldSession::Update ByteBufferException occured while parsing a packet (opcode: %u) from client %s, accountid=%i. Skipped packet.",
 						packet->GetOpcode(), GetRemoteAddress().c_str(),
 						GetAccountId());
