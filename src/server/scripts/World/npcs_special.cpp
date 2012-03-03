@@ -2145,6 +2145,13 @@ public:
 		npc_shadowfiendAI(Creature* pCreature) :
 				ScriptedAI(pCreature) {
 		}
+        void Reset()
+        {
+            if (me->isSummon())
+                if (Unit* pOwner = me->ToTempSummon()->GetSummoner())
+                    if (Unit* pet = pOwner->GetGuardianPet())
+                        pet->CastSpell(pet, MANA_LEECH, true);
+        }
 
         void Reset()
         {
