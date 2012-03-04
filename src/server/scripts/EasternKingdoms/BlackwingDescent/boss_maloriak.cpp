@@ -62,7 +62,7 @@ enum Spells
     SPELL_ENGULFING_DARKNESS        = 92982,
 
     // Final Phase
-    SPELL_ACID_NOVA                 = 93013,
+    SPELL_ACID_NOVA                 = 78225,
     SPELL_MAGMA_JET                 = 78194,
     SPELL_MAGMA_JET_AURA            = 78095,
 };
@@ -95,12 +95,23 @@ enum Events
     EVENT_ENGULFING_DARKNESS,
 
     // Final Phase
+    EVENT_ACID_NOVA,
 
+};
+
+enum ScriptTexts
+{
+    SAY_AGGRO                       = -1603499,
+    SAY_VIAL                        = -1603500,
+    SAY_LOW_HEALTH                  = -1603503,
+    SAY_SLAY                        = -1603504,
+    SAY_DEATH                       = -1603506,
+    SAY_NEFARIAN_ON_DEATH           = -1603507,
 };
 
 Position const MaloriakPositions[5] =
 {
-    {-111.704559f, -477.060272f, 73.456284f, 6.216876f}, // Cauldron Position
+    {-106.148842f, -473.517365f, 73.454552f, 4.699424f}, // Cauldron Position
     {-75.459419f, -430.066071f, 73.274872f, 3.609182f}, // Add summon Positions
     { -77.055763f, -441.063354f, 73.489388f, 3.285442f},
     {-75.247200f, -499.593018f, 73.240547f, 2.064154f},
@@ -163,6 +174,8 @@ public:
         {
             _EnterCombat();
 
+            DoScriptText(SAY_AGGRO, me);
+
             events.ScheduleEvent(EVENT_NEW_PHASE, urand(10000,12000));
             events.ScheduleEvent(EVENT_REMEDY, urand(15000,18000));
             events.ScheduleEvent(EVENT_ARCANE_STORM, urand(7000,8000));
@@ -180,6 +193,8 @@ public:
 
             if(me->GetHealthPct() < 25 && phase != PHASE_FINAL)
             {   // Enter Final Phase
+
+                DoScriptText(SAY_LOW_HEALTH, me);
 
                 uint32 uiBerserker = events.GetNextEventTime(EVENT_BERSERK);
                 events.Reset();
@@ -257,7 +272,10 @@ public:
                     }
 
                     if(phase != PHASE_BLACK)
+                    {
                         events.ScheduleEvent(EVENT_RELEASE_ABBERATIONS, urand(12000,17000));
+                        DoScriptText(SAY_VIAL-phase, me);
+                    }
 
                     events.ScheduleEvent(EVENT_UNLOCK_SPELLS, 1500);
                     break;
@@ -352,8 +370,14 @@ public:
             DoMeleeAttackIfReady();
         }
 
+        void KilledUnit(Unit* /*who*/)
+        {
+            DoScriptText(SAY_SLAY-urand(0,1), me);
+        }
+
         void JustDied(Unit* /*killer*/)
         {
+            DoScriptText(SAY_DEATH, me);
             DespawnMinions();
 
             _JustDied();
@@ -415,6 +439,7 @@ public:
                 break;
 
             case PHASE_BLACK:
+                me->RemoveAura(SPELL_SHADOW_IMBUED);
                 events.CancelEvent(EVENT_SUMMON_VILE_SWILL);
                 events.CancelEvent(EVENT_ENGULFING_DARKNESS);
                 break;
