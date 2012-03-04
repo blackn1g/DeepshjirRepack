@@ -54,17 +54,17 @@ AuctionHouseBot::AuctionHouseBot()
 {
     debug_Out = false;
     debug_Out_Filters = false;
-    AHBSeller = false;
-    AHBBuyer = false;
+    AHBSeller = true;
+    AHBBuyer = true;
 
     //Begin Filters
 
-    Vendor_Items = false;
-    Loot_Items = false;
-    Other_Items = false;
-    Vendor_TGs = false;
-    Loot_TGs = false;
-    Other_TGs = false;
+    Vendor_Items = true;
+    Loot_Items = true;
+    Other_Items = true;
+    Vendor_TGs = true;
+    Loot_TGs = true;
+    Other_TGs = true;
 
     No_Bind = false;
     Bind_When_Picked_Up = false;
@@ -112,7 +112,7 @@ AuctionHouseBot::AuctionHouseBot()
     DisableTGsBelowReqSkillRank = 0;
     DisableTGsAboveReqSkillRank = 0;
 
-    SellGlyphs = false;
+    SellGlyphs = true;
     GlyphsCount = 0;
     DisableGlyphBelowLevel = 0;
     DisableGlyphAboveLevel = 0;
@@ -140,6 +140,9 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
 {
     bool glyphMode = false;
 
+    AHBSeller = true;
+    AHBBuyer = true;
+
     if (!AHBSeller)
     {
         if (debug_Out) sLog->outError("AHSeller: Disabled");
@@ -151,7 +154,7 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
 
     if (maxItems == 0)
     {
-        //if (debug_Out) sLog->outString("AHSeller: Auctions disabled");
+        if (debug_Out) sLog->outString("AHSeller: Auctions disabled");
         return;
     }
 
@@ -189,12 +192,12 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
     {
         if (auctions >= minItems)
         {
-            //if (debug_Out) sLog->outString("AHSeller: Auctions above minimum");
+            if (debug_Out) sLog->outString("AHSeller: Auctions above minimum");
             return;
         }
         if (auctions >= maxItems)
         {
-	    //if (debug_Out) sLog->outString("AHSeller: Auctions at or above maximum");
+	        if (debug_Out) sLog->outString("AHSeller: Auctions at or above maximum");
             return;
         }
         if ((maxItems - auctions) >= ItemsPerCycle)

@@ -31,6 +31,7 @@ enum Data
     DATA_CHIMAERON,
     DATA_ATRAMEDES,
     DATA_NEFARIAN,
+    DATA_ABBERATIONS_LEFT,
 };
 
 enum Creatures
@@ -74,10 +75,11 @@ enum Creatures
     // Maloriak
     NPC_ABBERATON                   = 41440,
     NPC_PRIME_SUBJECT               = 41841,
-    NPC_ABBERATIONS_TRIGGER         = 41377,
+    NPC_SLIME_TRIGGER               = 41377,
     NPC_FLASH_FREEZE                = 41576,
     NPC_MAGMA_JET_CONTROLLER        = 50030,
     NPC_ABSOLUTE_ZERO               = 41961,
+    NPC_VILE_SWILL                  = 49811,
 
     // Nefarian
     NPC_ONYXIA                      = 41270,

@@ -75,21 +75,6 @@ Position const SummonPos[3] =
 {200.517f, 787.687f, 808.368f, 2.056f},
 {200.558f, 817.046f, 808.368f, 4.141f}};
 
-/*
-75699 - Pre Visual Aura
-75700 - Visual Errupt
-75722 - Summon Boss ability
-91347 -  Big Visual
-91349 - Visual Fight
-91350 - ?
-91469 - damage jump?
-94046 - ?
-94047 - ?
-
-
-79535
-*/
-
 class boss_lady_nazjar : public CreatureScript
 {
 public:

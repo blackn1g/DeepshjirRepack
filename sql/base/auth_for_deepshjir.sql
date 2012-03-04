@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `account` (
 # Dumping data for table deepshjir_auth.account: ~0 rows (approximately)
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
 INSERT INTO `account` (`id`, `username`, `sha_pass_hash`, `sessionkey`, `v`, `s`, `email`, `joindate`, `last_ip`, `failed_logins`, `locked`, `last_login`, `online`, `expansion`, `mutetime`, `locale`, `recruiter`) VALUES
-(1, 'AHBOT', '6D737C82527BC84876CB6C4F0CF78BE7C29E3CAE', NULL, NULL, NULL, NULL, '0000-00-00 00:00:00', '127.0.0.1', 0, 0, '0000-00-00 00:00:00', 0, 3, 0, 0, 0),
+(1, 'AHBOT', '34910F9BFA8486A4993784E88F883DDE01CEB1F5', NULL, NULL, NULL, NULL, '0000-00-00 00:00:00', '127.0.0.1', 0, 0, '0000-00-00 00:00:00', 0, 3, 0, 0, 0),
 (2, 'ROOT', '8584573E80A69F87626A8C9BC29BDB0D22B5113D', NULL, NULL, NULL, NULL, '0000-00-00 00:00:00', '127.0.0.1', 0, 0, '0000-00-00 00:00:00', 0, 3, 0, 0, 0);
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `account_access` (
 # Dumping data for table deepshjir_auth.account_access: ~0 rows (approximately)
 /*!40000 ALTER TABLE `account_access` DISABLE KEYS */;
 INSERT INTO `account_access` (`id`, `gmlevel`, `RealmID`) VALUES
-	(2, 4, -1);
+	(2, 5, -1);
 /*!40000 ALTER TABLE `account_access` ENABLE KEYS */;
 
 

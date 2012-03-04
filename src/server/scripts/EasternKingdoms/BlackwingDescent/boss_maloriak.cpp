@@ -30,7 +30,7 @@ enum Spells
     // General
     SPELL_BERSERK                   = 64238,
     SPELL_RELEASE_ABBERATIONS       = 77569,
-    SPELL_RELEASE_ALL_MINIONS       = 77991,
+    SPELL_RELEASE_ALL_ABBERATIONS   = 77991,
     SPELL_REMEDY                    = 92967,
     SPELL_ARCANE_STORM              = 77896,
 
@@ -45,22 +45,26 @@ enum Spells
 
     SPELL_BITING_CHILL              = 77760,
 
-    SPELL_FLASH_FREEZE              = 92980,
+    SPELL_FLASH_FREEZE              = 77699, // HC: 92980
     SPELL_FLASH_FREEZE_SUMMON       = 77711,
+    SPELL_FLASH_FREEZE_VISUAL       = 77712,
 
     // Green Phase
     SPELL_THROW_GREEN_BOTTLE        = 77937, // Or 77938?
-    SPELL_DEBILITATING_SLIME        = 92910,
-    SPELL_DEBILITATING_SLIME_VISUAL = 77602, //(Dummy Effect)
+
+    SPELL_DEBILITATING_SLIME        = 77602, // (Dummy Effect - or only visual?)
+    SPELL_DEBILITATING_SLIME_DEBUFF = 77615, // 92910
 
     // Black Phase
     SPELL_THROW_BLACK_BOTTLE        = 92831, // Or 92828?
+    SPELL_SHADOW_IMBUED             = 92716,
+
+    SPELL_ENGULFING_DARKNESS        = 92982,
 
     // Final Phase
     SPELL_ACID_NOVA                 = 93013,
     SPELL_MAGMA_JET                 = 78194,
     SPELL_MAGMA_JET_AURA            = 78095,
-
 };
 
 enum Events
@@ -81,11 +85,26 @@ enum Events
     // Blue Phase
     EVENT_BITING_CHILL,
     EVENT_FLASH_FREEZE,
+
+    // Green Phase
+    EVENT_CAULDRON_EXPLODE,
+    EVENT_RELEASE_ABBERATIONS,
+
+    // Black Phase
+    EVENT_SUMMON_VILE_SWILL,
+    EVENT_ENGULFING_DARKNESS,
+
+    // Final Phase
+
 };
 
-Position const CauldronPosition[1] =
+Position const MaloriakPositions[5] =
 {
-    {-111.704559f, -477.060272f, 73.456284f, 6.216876f},
+    {-111.704559f, -477.060272f, 73.456284f, 6.216876f}, // Cauldron Position
+    {-75.459419f, -430.066071f, 73.274872f, 3.609182f}, // Add summon Positions
+    { -77.055763f, -441.063354f, 73.489388f, 3.285442f},
+    {-75.247200f, -499.593018f, 73.240547f, 2.064154f},
+    {-143.885178f, -457.006409f, 73.369576f, 0.112437f},
 };
 
 enum Phases
@@ -97,6 +116,8 @@ enum Phases
     PHASE_NON,
     PHASE_FINAL,
 };
+
+#define TIMER_PHASE 45000
 
 class boss_maloriak : public CreatureScript
 {
@@ -121,15 +142,14 @@ public:
         uint8 abberationsLeft;
         uint8 lastPhase;
         bool spellsLocked;
-
         bool wasInBlackPhase;
         uint8 withoutGreenPhase;
 
         void Reset()
-        {
+        {   
             events.Reset();
             me->SetReactState(REACT_AGGRESSIVE);
-            abberationsLeft = 15;
+            abberationsLeft = 18;
             withoutGreenPhase = 0;
             wasInBlackPhase = true;
             spellsLocked = false;
@@ -166,8 +186,8 @@ public:
                 events.ScheduleEvent(EVENT_BERSERK, uiBerserker);
 
                 phase = PHASE_FINAL;
-
-                DoCast(SPELL_RELEASE_ABBERATIONS);
+                me->InterruptNonMeleeSpells(true);
+                DoCast(SPELL_RELEASE_ALL_ABBERATIONS);
             };
 
             while (uint32 eventId = events.ExecuteEvent())
@@ -178,28 +198,34 @@ public:
                 case EVENT_NEW_PHASE:
                     UpdatePhase(urand(PHASE_RED, PHASE_BLUE));
                     spellsLocked = true;
+                    events.ScheduleEvent(EVENT_NEW_PHASE, TIMER_PHASE);
                     break;
 
                 case EVENT_DRINK_BOTTLE:
 
-                    switch(phase)
+                    if(GameObject* cauldron = me->FindNearestGameObject(GOB_MALORIAKS_CAULDRON,100.f))
                     {
-                    case PHASE_RED:
-                        DoCastAOE(SPELL_THROW_RED_BOTTLE);
-                        break;
+                        switch(phase)
+                        {
+                        case PHASE_RED:
+                            DoCast(cauldron->ToCreature(), SPELL_THROW_RED_BOTTLE);
+                            break;
 
-                    case PHASE_BLUE:
-                        DoCastAOE(SPELL_THROW_BLUE_BOTTLE);
-                        break;
+                        case PHASE_BLUE:
+                            DoCast(cauldron->ToCreature(), SPELL_THROW_BLUE_BOTTLE);
+                            break;
 
-                    case PHASE_GREEN:
-                        DoCastAOE(SPELL_THROW_GREEN_BOTTLE);
-                        break;
+                        case PHASE_GREEN:
+                            DoCast(cauldron->ToCreature(), SPELL_THROW_GREEN_BOTTLE);
+                            break;
 
-                    case PHASE_BLACK:
-                        DoCastAOE(SPELL_THROW_BLACK_BOTTLE);
-                        break;
+                        case PHASE_BLACK:
+                            DoCast(cauldron->ToCreature(), SPELL_THROW_BLACK_BOTTLE);
+                            me->AddAura(SPELL_SHADOW_IMBUED, me);
+                            break;
+                        }
                     }
+
                     events.ScheduleEvent(EVENT_WAIT_SWITCH_PHASE, 1000);
                     break;
 
@@ -221,16 +247,22 @@ public:
                         break;
 
                     case PHASE_GREEN:
+                        events.ScheduleEvent(EVENT_CAULDRON_EXPLODE, 2000);
                         break;
 
                     case PHASE_BLACK:
+                        events.ScheduleEvent(EVENT_SUMMON_VILE_SWILL, urand(4000,6000));
+                        events.ScheduleEvent(EVENT_ENGULFING_DARKNESS, 9000);
                         break;
                     }
 
+                    if(phase != PHASE_BLACK)
+                        events.ScheduleEvent(EVENT_RELEASE_ABBERATIONS, urand(12000,17000));
+
                     events.ScheduleEvent(EVENT_UNLOCK_SPELLS, 1500);
-                    events.ScheduleEvent(EVENT_NEW_PHASE, 25000);
                     break;
 
+                    // Misc
                 case EVENT_UNLOCK_SPELLS:
                     spellsLocked = false;
                     break;
@@ -278,15 +310,39 @@ public:
                     if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
                         DoCast(target, SPELL_BITING_CHILL);
 
-                    events.ScheduleEvent(EVENT_BITING_CHILL, urand(11000, 13000));
+                    events.ScheduleEvent(EVENT_BITING_CHILL, urand(8000, 10000));
                     break;
 
                 case EVENT_FLASH_FREEZE:
                     if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
                         target->CastSpell(target, SPELL_FLASH_FREEZE_SUMMON, true);
 
-                    events.ScheduleEvent(EVENT_FLASH_FREEZE, urand(14000, 16000));
+                    events.ScheduleEvent(EVENT_FLASH_FREEZE, urand(11000, 13000));
                     break;
+
+                    // Green Phase
+                case EVENT_CAULDRON_EXPLODE:
+                    me->FindNearestCreature(NPC_SLIME_TRIGGER, 100.f)->AI()->DoCastAOE(SPELL_DEBILITATING_SLIME);
+                    DoCastCausticSlime();
+                    events.ScheduleEvent(EVENT_CAULDRON_EXPLODE, 15000);
+                    break;
+
+                case EVENT_RELEASE_ABBERATIONS:
+                    DoCast(SPELL_RELEASE_ABBERATIONS);
+                    break;
+
+                    // Black Phase
+                case EVENT_SUMMON_VILE_SWILL:
+                    me->SummonCreature(NPC_VILE_SWILL, MaloriakPositions[urand(1,4)]);
+                    events.ScheduleEvent(EVENT_SUMMON_VILE_SWILL, urand(4000,5000));
+                    break;
+
+                case EVENT_ENGULFING_DARKNESS:
+                    DoCastAOE(SPELL_ENGULFING_DARKNESS);
+                    events.ScheduleEvent(EVENT_ENGULFING_DARKNESS, 16000);
+                    break;
+
+                    // Final Phase
 
                 default:
                     break;
@@ -303,6 +359,12 @@ public:
             _JustDied();
         }
 
+        void JustSummoned(Creature* summon)
+        {
+            summon->AI()->DoZoneInCombat(summon);
+            summon->SetInCombatWithZone();
+        }
+
         void MovementInform(uint32 type, uint32 id)
         {
             if (type != POINT_MOTION_TYPE || id != 1)
@@ -315,6 +377,20 @@ public:
             }
 
             events.ScheduleEvent(EVENT_DRINK_BOTTLE, 1500);
+        }
+
+        uint32 GetData(uint32 type)
+        {
+            if(type == DATA_ABBERATIONS_LEFT)
+                return abberationsLeft;
+            else
+                return 0;
+        }
+
+        void SetData(uint32 type, uint32 data)
+        {
+            if(type == DATA_ABBERATIONS_LEFT)
+                abberationsLeft = data;
         }
 
     private:
@@ -335,9 +411,12 @@ public:
                 break;
 
             case PHASE_GREEN:
+                events.CancelEvent(EVENT_CAULDRON_EXPLODE);
                 break;
 
             case PHASE_BLACK:
+                events.CancelEvent(EVENT_SUMMON_VILE_SWILL);
+                events.CancelEvent(EVENT_ENGULFING_DARKNESS);
                 break;
             }
 
@@ -370,16 +449,19 @@ public:
             // Every 3. Phase is a Green Phase
             if(withoutGreenPhase >= 3)
             {
+                if(phase == PHASE_BLACK)
+                    wasInBlackPhase = false;
+
                 phase = PHASE_GREEN;
                 withoutGreenPhase = 0;
             }              
 
             // Debug: (here you can define a spezified phase for debugging)
-            // phase = PHASE_BLUE;
+            // phase = PHASE_BLACK;
 
             me->SetReactState(REACT_PASSIVE);
             me->AttackStop();
-            me->GetMotionMaster()->MovePoint(1, CauldronPosition[0]);
+            me->GetMotionMaster()->MovePoint(1, MaloriakPositions[0]);
         }
 
         inline void DespawnMinions()
@@ -387,8 +469,9 @@ public:
             DespawnCreatures(NPC_ABBERATON);
             DespawnCreatures(NPC_PRIME_SUBJECT);
             DespawnCreatures(NPC_FLASH_FREEZE);
+            DespawnCreatures(NPC_VILE_SWILL);
             DespawnCreatures(NPC_MAGMA_JET_CONTROLLER);
-            DespawnCreatures(NPC_ABSOLUTE_ZERO);
+            DespawnCreatures(NPC_ABSOLUTE_ZERO);  
         }
 
         void DespawnCreatures(uint32 entry)
@@ -401,6 +484,34 @@ public:
 
             for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
                 (*iter)->DespawnOrUnsummon();
+        }
+
+        inline void DoCastCausticSlime()
+        {
+            // All Players
+            Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
+            if (!PlayerList.isEmpty())
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                    me->AddAura(SPELL_DEBILITATING_SLIME_DEBUFF,  i->getSource());
+
+            // Maloriak and all his Minions
+            me->AddAura(SPELL_DEBILITATING_SLIME_DEBUFF, me);
+
+            std::list<Creature*> creatures;
+
+            // Abberations
+            GetCreatureListWithEntryInGrid(creatures, me, NPC_ABBERATON, 50.0f);
+
+            if (!creatures.empty())
+                for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
+                    me->AddAura(SPELL_DEBILITATING_SLIME_DEBUFF,  (*iter));
+
+            // Vile Swill (Hardmode)
+            GetCreatureListWithEntryInGrid(creatures, me, NPC_VILE_SWILL, 50.0f);
+
+            if (!creatures.empty())
+                for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
+                    me->AddAura(SPELL_DEBILITATING_SLIME_DEBUFF,  (*iter));
         }
     };
 };
@@ -423,14 +534,23 @@ public:
 
         void IsSummonedBy(Unit* summoner)
         {
-            target = summoner;
-            me->AddAura(SPELL_FLASH_FREEZE, me);
-            target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_STUNNED | UNIT_FLAG_PACIFIED);
+            target = summoner;           
+
+            if(target)
+            {
+                me->NearTeleportTo(target->GetPositionX(),target->GetPositionY(),target->GetPositionZ(),target->GetOrientation());
+                me->AddAura(SPELL_FLASH_FREEZE, target);
+            }
+
+            me->AddAura(SPELL_FLASH_FREEZE_VISUAL, me);
         }
 
         void JustDied(Unit* /*killer*/)
         {
-            target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_STUNNED | UNIT_FLAG_PACIFIED);
+            if(target)
+                target->RemoveAura(SPELL_FLASH_FREEZE);
+
+            me->ForcedDespawn();
         }
     };
 };
@@ -449,10 +569,25 @@ public:
             return true;
         }
 
-        void HandleDummy(SpellEffIndex /*effIndex*/)
+        bool Load()
+        {
+            return true;
+        }
+
+        void HandleDummy(SpellEffIndex effIndex)
         {
             if(Unit* caster = GetCaster())
-                caster->MonsterYell("Hi",0,0);
+            {
+                uint8 abberationsLeft = caster->ToCreature()->AI()->GetData(DATA_ABBERATIONS_LEFT);
+
+                if(abberationsLeft >= 3)
+                {
+                    for (uint8 i = 0; i<=2; i++)
+                        caster->SummonCreature(NPC_ABBERATON, MaloriakPositions[urand(1,4)]);
+
+                    caster->ToCreature()->AI()->SetData(DATA_ABBERATIONS_LEFT, abberationsLeft-3);
+                }
+            }
         }
 
         void Register()
@@ -488,7 +623,19 @@ public:
 
         void HandleDummy(SpellEffIndex effIndex)
         {
-            GetCaster()->MonsterSay("test",0,0);
+            if(Unit* caster = GetCaster())
+            {
+                uint8 abberationsLeft = caster->ToCreature()->AI()->GetData(DATA_ABBERATIONS_LEFT);
+
+                if(abberationsLeft > 0)
+                    for (uint8 i = 0; i < abberationsLeft; i++)
+                        caster->SummonCreature(NPC_ABBERATON, MaloriakPositions[urand(1,4)]);
+
+                for (uint8 i = 0; i <= 1; i++)
+                    caster->SummonCreature(NPC_PRIME_SUBJECT, MaloriakPositions[urand(1,4)]);
+
+                caster->ToCreature()->AI()->SetData(DATA_ABBERATIONS_LEFT, 0);
+            }
         }
 
         void Register()
