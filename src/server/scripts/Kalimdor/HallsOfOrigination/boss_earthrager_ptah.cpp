@@ -88,6 +88,7 @@ class boss_earthrager_ptah : public CreatureScript
             {
                 _Reset();
                 instance->SetData(DATA_EARTHRAGER_PTAH, NOT_STARTED);
+                instance->SendEncounterUnit(ENCOUNTER_FRAME_REMOVE, me);
             }
 
             void EnterCombat(Unit * /*who*/)

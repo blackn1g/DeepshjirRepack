@@ -123,11 +123,12 @@ public:
                             go->SetGoState(GO_STATE_READY);
                         }
                     break;
-                case GO_ANHUUR_BRIDGE:
+/*                case GO_ANHUUR_BRIDGE:                    //already handled via boss script
                     AnhuurBridgeGUID = go->GetGUID();
                     if (GetData(DATA_TEMPLE_GUARDIAN_ANHUUR) == DONE)
                             HandleGameObject(AnhuurBridgeGUID, true, go);
                     break;
+*/
             }
         }
 

@@ -1,62 +1,42 @@
-/*
- * Copyright (C) 2010-2012 Project SkyFire <http://www.projectskyfire.org/>
- * Copyright (C) 2011-2012 ArkCORE <http://www.arkania.net/>
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
- /*
- SFName: boss_templeguardian_anhuur
- SF%Complete: 80%
- SFComment: Add object handling.
- SFCategory: Halls Of Origination
-
- Known Bugs:
-
- TODO:
- 1. Needs Testing
- 2. Missing ScriptTexts
- 3. Check Timers
- */
-
-#include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "ScriptPCH.h"
 #include "halls_of_origination.h"
 
 enum ScriptTexts
 {
-    SAY_AGGRO                = 0,
-    SAY_BEACON               = 1,
-    SAY_KILL_1               = 2,
-    SAY_KILL_2               = 3,
-    SAY_DEATH                = 4,
-    SAY_ANNOUNCE             = 5
+    SAY_AGGRO                                   = 0,
+    SAY_BEACON                                  = 1,
+    SAY_KILL_1                                  = 2,
+    SAY_KILL_2                                  = 3,
+    SAY_DEATH                                   = 4,
+    SAY_ANNOUNCE                                = 5,
+};
+
+enum Achievement
+{
+    ACHIEVE_I_HATE_THIS_SONG                    = 5293,
 };
 
 enum Spells
 {
-    SPELL_DIVINE_RECKONING   = 75592,
-    SPELL_REVERBERATING_HYMN = 75322,
-    SPELL_SHIELD_OF_LIGHT    = 74938,
-    SPELL_SEARING_FLAME_SUMM = 75114,
+    SPELL_DIVINE_RECKONING                      = 75592,
+	SPELL_DEVINE_RECKONING_H                    = 94949,
+    SPELL_SHIELD_OF_LIGHT                       = 74938,
+    SPELL_SEARING_FLAME_SUMM                    = 75117,
     // Lever beams.
-    SPELL_BEAM_LEFT          = 83697, // Object 203133
-    SPELL_BEAM_RIGHT         = 83698, // Object 203136
+    SPELL_BEAM_LEFT                             = 83697, // Object 203133
+    SPELL_BEAM_RIGHT                            = 83698, // Object 203136
 };
 
-const Position SpawnPosition[] =
+enum AnhuurMobs
+{
+	GO_ANHUUR_BRIDGE                            = 206506,
+	GO_ANHUUR_BRIDGE_WALL                       = 402333,
+};
+
+const float centerPos[4] =
+    {-640.527f, 334.855f, 78.345f, 1.54f};
+
+const Position aSpawnLocations[21] =
 {
     {-654.277f, 361.118f, 52.9508f, 5.86241f},
     {-670.102f, 350.896f, 54.1803f, 2.53073f},
@@ -81,25 +61,29 @@ const Position SpawnPosition[] =
     {-662.902f, 341.463f, 52.9502f, 2.84307f}
 };
 
+enum Events
+{
+    EVENT_FLAMES,
+    EVENT_REKOCKING,
+};
+
 enum BossPhases
 {
     PHASE_NORMAL = 1,
     PHASE_SHIELD = 2,
 };
 
+/******************
+** Guardian Anhuur
+******************/
 class boss_temple_guardian_anhuur : public CreatureScript
 {
     public:
         boss_temple_guardian_anhuur() : CreatureScript("boss_temple_guardian_anhuur") { }
 
-        CreatureAI* GetAI(Creature* creature) const
+        struct boss_temple_guardian_anhuurAI : public BossAI
         {
-            return new boss_temple_guardian_anhuurAI(creature);
-        }
-
-        struct boss_temple_guardian_anhuurAI : public ScriptedAI
-        {
-            boss_temple_guardian_anhuurAI(Creature* creature) : ScriptedAI(creature)
+            boss_temple_guardian_anhuurAI(Creature* creature) : BossAI(creature, DATA_TEMPLE_GUARDIAN_ANHUUR)
             {
                 instance = creature->GetInstanceScript();
             }
@@ -107,27 +91,23 @@ class boss_temple_guardian_anhuur : public CreatureScript
             std::list<uint64> SummonList;
 
             InstanceScript *instance;
+            EventMap events;
 
             uint8 Phase;
             uint8 PhaseCount;
             uint8 FlameCount;
 
-            uint32 DivineReckoningTimer;
-            uint32 SearingFlameTimer;
-
             void Reset()
             {
-                if (instance)
-                    instance->SetData(DATA_TEMPLE_GUARDIAN_ANHUUR_EVENT, NOT_STARTED);
-
+                _Reset();
+                instance->SetData(DATA_TEMPLE_GUARDIAN_ANHUUR, NOT_STARTED);
                 Phase = PHASE_NORMAL;
                 PhaseCount = 0;
                 FlameCount = 2;
-                DivineReckoningTimer = 8000;
-                SearingFlameTimer = 5000;
                 RemoveSummons();
                 me->RemoveAurasDueToSpell(SPELL_SHIELD_OF_LIGHT);
-                me->RemoveAurasDueToSpell(SPELL_REVERBERATING_HYMN);
+                me->RemoveAurasDueToSpell(SPELL_DIVINE_RECKONING);
+                instance->SendEncounterUnit(ENCOUNTER_FRAME_REMOVE, me);
             }
 
             void RemoveSummons()
@@ -137,32 +117,31 @@ class boss_temple_guardian_anhuur : public CreatureScript
 
                 for (std::list<uint64>::const_iterator itr = SummonList.begin(); itr != SummonList.end(); ++itr)
                 {
-                    if (Creature* temp = Unit::GetCreature(*me, *itr))
-                        if (temp)
-                            temp->DisappearAndDie();
+                    if (Creature* pTemp = Unit::GetCreature(*me, *itr))
+                        if (pTemp)
+                            pTemp->DisappearAndDie();
                 }
                 SummonList.clear();
             }
 
-            void JustSummoned(Creature* summon)
+            void JustSummoned(Creature* pSummon)
             {
-                SummonList.push_back(summon->GetGUID());
+                SummonList.push_back(pSummon->GetGUID());
             }
 
             void ChangePhase()
             {
-                DoTeleportTo(-640.527f, 334.855f, 78.345f, 1.54f);
+                DoTeleportTo(centerPos);
                 me->SetOrientation(1.54f);
-                for (uint32 x = 0; x<21; ++x)
-                   me->SummonCreature(NPC_PIT_SNAKE, SpawnPosition[x], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+                for(uint32 x = 0; x<21; ++x)
+                   me->SummonCreature(NPC_PIT_SNAKE, aSpawnLocations[x].GetPositionX(), aSpawnLocations[x].GetPositionY(), aSpawnLocations[x].GetPositionZ(), 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
 
-                DoCast(me, SPELL_SHIELD_OF_LIGHT);
-                DoCast(me, SPELL_REVERBERATING_HYMN);
-                //Talk(SAY_BEACON);
-                //Talk(SAY_ANNOUNCE);
+                Talk(SAY_BEACON);
+                Talk(SAY_ANNOUNCE);
                 PhaseCount++;
                 Phase = PHASE_SHIELD;
-                me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, true);
+				DoCast(me, SPELL_SHIELD_OF_LIGHT);
+				me->AddAura(74938, me);
 
                 if (Creature *light1 = me->SummonCreature(40183, -603.465f, 334.38f, 65.4f, 3.12f,TEMPSUMMON_CORPSE_DESPAWN, 1000))
                     light1->CastSpell(me, SPELL_BEAM_LEFT, false);
@@ -173,24 +152,28 @@ class boss_temple_guardian_anhuur : public CreatureScript
 
             void KilledUnit(Unit* /*Killed*/)
             {
-                //Talk(RAND(SAY_KILL_1, SAY_KILL_2));
+                Talk(RAND(SAY_KILL_1, SAY_KILL_2));
             }
 
             void JustDied(Unit* /*Kill*/)
             {
                 RemoveSummons();
-                //Talk(SAY_DEATH);
-                if (instance)
-                    instance->SetData(DATA_TEMPLE_GUARDIAN_ANHUUR_EVENT, DONE);
+                Talk(SAY_DEATH);
+                instance->SetData(DATA_TEMPLE_GUARDIAN_ANHUUR, DONE);
+                instance->SendEncounterUnit(ENCOUNTER_FRAME_REMOVE, me);
 
                 GameObject* Bridge = me->FindNearestGameObject(GO_ANHUUR_BRIDGE, 200);
                 if (Bridge)
                     Bridge->SetGoState(GO_STATE_ACTIVE);
+
+				GameObject* Door = me->FindNearestGameObject(GO_ANHUUR_BRIDGE_WALL, 200);
+				if (Door)
+					Door->RemoveFromWorld();
             }
 
             void SummonedCreatureDespawn(Creature* summon)
             {
-                switch (summon->GetEntry())
+                switch(summon->GetEntry())
                 {
                     case 40183:
                         FlameCount--;
@@ -200,11 +183,13 @@ class boss_temple_guardian_anhuur : public CreatureScript
 
             void EnterCombat(Unit* /*Ent*/)
             {
-                //Talk(SAY_AGGRO);
+                Talk(SAY_AGGRO);
+                instance->SetData(DATA_TEMPLE_GUARDIAN_ANHUUR, IN_PROGRESS);
+                instance->SendEncounterUnit(ENCOUNTER_FRAME_ADD, me);
 
-                if (instance)
-                    instance->SetData(DATA_TEMPLE_GUARDIAN_ANHUUR_EVENT, IN_PROGRESS);
-
+				me->SummonGameObject(GO_ANHUUR_BRIDGE_WALL, -641.39f, 304.37f, 52.9975f, 3.15858f, 0, 0, 0.999964f, -0.00849289f, 0);
+                events.ScheduleEvent(EVENT_REKOCKING, 8000);
+                events.ScheduleEvent(EVENT_FLAMES, 5000);
                 DoZoneInCombat();
             }
 
@@ -213,7 +198,8 @@ class boss_temple_guardian_anhuur : public CreatureScript
                 if (!UpdateVictim() && !me->HasAura(SPELL_SHIELD_OF_LIGHT))
                     return;
 
-                if ((me->HealthBelowPct(34) && Phase == PHASE_NORMAL && PhaseCount == 1) || (me->HealthBelowPct(67) && Phase == PHASE_NORMAL && PhaseCount == 0))
+                if ((me->HealthBelowPct(34) && Phase == PHASE_NORMAL && PhaseCount == 1) ||
+                    (me->HealthBelowPct(67) && Phase == PHASE_NORMAL && PhaseCount == 0))
                 {
                     ChangePhase();
                 }
@@ -230,37 +216,87 @@ class boss_temple_guardian_anhuur : public CreatureScript
                     RemoveSummons();
                 }
 
-                if (DivineReckoningTimer <= diff && Phase == PHASE_NORMAL)
-                {
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                        DoCast(target, SPELL_DIVINE_RECKONING);
-                    DivineReckoningTimer = urand(15000,18000);
-                }
-                else DivineReckoningTimer -= diff;
+                events.Update(diff);
 
-                if (SearingFlameTimer <= diff && Phase == PHASE_NORMAL)
+                while (uint32 eventId = events.ExecuteEvent())
                 {
-                    if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
-                        target->CastSpell(target, SPELL_SEARING_FLAME_SUMM, true);
-                    SearingFlameTimer = 8000;
+                    switch (eventId)
+                    {
+                        case EVENT_REKOCKING:
+                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                                DoCast(target, SPELL_DIVINE_RECKONING);
+                            events.ScheduleEvent(EVENT_REKOCKING, urand(15000, 18000));
+                            break;
+                        case EVENT_FLAMES:
+                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
+                                target->CastSpell(target, SPELL_SEARING_FLAME_SUMM, true);
+                            events.ScheduleEvent(EVENT_FLAMES, 8000);
+                            break;
+                    }
                 }
-                else SearingFlameTimer -= diff;
-
                 DoMeleeAttackIfReady();
             }
         };
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new boss_temple_guardian_anhuurAI(creature);
+        }
 };
 
+/********************
+** viper script
+*********************/
+#define spell_crochet 74538
+class mob_viper: public CreatureScript
+{
+public: 
+ mob_viper() : CreatureScript("mob_viper") { } 
+
+ struct mob_viperAI : public ScriptedAI
+    {
+        mob_viperAI(Creature *c) : ScriptedAI(c) {}
+
+		uint32 crochet;
+		
+        void Reset()
+        {
+           crochet = 15000;     
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (!UpdateVictim())
+            return;
+
+            if (crochet<= diff)
+            {
+                if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, spell_crochet);
+                crochet   = 15000; 
+            } else crochet -= diff; 
+
+			DoMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAI* GetAI(Creature* pCreature) const
+    {
+        return new mob_viperAI (pCreature);
+    }
+
+};
+
+/********************
+** light beacon
+*********************/
 class go_beacon_of_light : public GameObjectScript
 {
 public:
     go_beacon_of_light() : GameObjectScript("go_beacon_of_light") { }
 
-    bool OnGossipHello(Player* player, GameObject* go)
+    bool OnGossipHello(Player* pPlayer, GameObject* pGO)
     {
-        player->CastSpell(go, 68398, false);
-
-        if (Creature* beam = go->FindNearestCreature(40183, 14.0f, true))
+        if (Creature* beam = pGO->FindNearestCreature(40183, 14.0f, true))
             beam->Kill(beam);
 
         return true;
@@ -271,4 +307,5 @@ void AddSC_boss_temple_guardian_anhuur()
 {
     new boss_temple_guardian_anhuur();
     new go_beacon_of_light();
+	new mob_viper();
 }
