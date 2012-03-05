@@ -81,6 +81,12 @@ enum Creatures
     NPC_ABSOLUTE_ZERO               = 41961,
     NPC_VILE_SWILL                  = 49811,
 
+    // Atramedes
+    // Pre Event
+    NPC_PRE_MALORIAK                = 43404,
+    NPC_PRE_NEFARIAN                = 49799,
+    NPC_PRE_ATRAMEDES               = 43407,
+
     // Nefarian
     NPC_ONYXIA                      = 41270,
 

@@ -595,6 +595,47 @@ public:
     }
 };
 
+
+
+class mob_nefarian_yeller : public CreatureScript
+{
+public:
+    mob_nefarian_yeller() : CreatureScript("mob_nefarian_yeller") { }
+
+    struct mob_nefarian_yellerAI : public ScriptedAI
+    {
+        mob_nefarian_yellerAI(Creature* creature) : ScriptedAI(creature)
+        {
+            timer = 1000;
+        }
+
+        uint32 timer;
+
+        void UpdateAI(uint32 const diff) 
+        {
+            if (timer <= diff)
+            {
+                if (Player* target = me->FindNearestPlayer(5.f, true))
+                    if (target->GetDistance(me) < 85.f  && me->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
+                    {
+                        //DoScriptText(SAY_INTRO - urand(0,2), me);
+
+                        me->ForcedDespawn();
+                    } else
+                        timer = 1000;
+                else
+                    timer = 1000;
+
+            } else timer -= diff;
+        }
+    };
+    
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new mob_nefarian_yellerAI(creature);
+    }
+};
+
 void AddSC_blackwing_descent()
 {
     new mob_nefarian_helper_heroic();

@@ -52,6 +52,8 @@ public:
 
         // Atramedes
         uint64 uiAtramedes;
+        uint64 uiPreNefarian;
+        uint64 uiPreAtramedes;
 
         // Chimaeron
         uint64 uiChimaeron;
@@ -93,6 +95,8 @@ public:
 
             // Atramedes
             uiAtramedes = 0;
+            uiPreNefarian = 0;
+            uiPreAtramedes = 0;
 
             // Chimaeron
             uiChimaeron = 0;
@@ -160,6 +164,12 @@ public:
                 // Atramedes
             case BOSS_ATRAMEDES: 
                 uiAtramedes = creature->GetGUID(); 
+                break;
+            case NPC_PRE_NEFARIAN: 
+                uiPreNefarian = creature->GetGUID(); 
+                break;
+            case NPC_PRE_ATRAMEDES: 
+                uiPreAtramedes = creature->GetGUID(); 
                 break;
 
                 // Chimaeron
@@ -250,6 +260,12 @@ public:
             case BOSS_ATRAMEDES:
                 return uiAtramedes; 
                 break;
+            case NPC_PRE_NEFARIAN:
+                return uiPreNefarian; 
+                break;
+            case NPC_PRE_ATRAMEDES:
+                return uiPreAtramedes; 
+                break;
 
                 // Chimaeron
             case BOSS_CHIMAERON:
@@ -286,8 +302,8 @@ public:
         }
 
         bool SetBossState(uint32 data, EncounterState state) {
-			if (!InstanceScript::SetBossState(data, state))
-				return false;
+            if (!InstanceScript::SetBossState(data, state))
+                return false;
 
             if(state == DONE)
             {
@@ -307,24 +323,24 @@ public:
                     if(GameObject* onyxiaPlatform = instance->GetGameObject(gobOnyxiaPlatform))
                         onyxiaPlatform->SetPhaseMask(PHASEMASK_NORMAL, true);
                     break;
-                 }
+                }
             }
 
-			return true;
-		}
+            return true;
+        }
 
-            bool CheckRequiredBosses(uint32 bossId, Player const* player = NULL) const
-            {
-                if ((player->GetSession()->GetSecurity() > SEC_GAMEMASTER ))
-                    return true;
-
-                /*switch (bossId)
-                {
-                    
-                }*/
-
+        bool CheckRequiredBosses(uint32 bossId, Player const* player = NULL) const
+        {
+            if ((player->GetSession()->GetSecurity() > SEC_GAMEMASTER ))
                 return true;
-            }
+
+            /*switch (bossId)
+            {
+
+            }*/
+
+            return true;
+        }
 
         std::string GetSaveData()
         {
