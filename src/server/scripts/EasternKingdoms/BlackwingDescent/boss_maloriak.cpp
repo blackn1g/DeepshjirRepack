@@ -101,19 +101,19 @@ enum Events
 
 enum ScriptTexts
 {
-    SAY_AGGRO                       = -1603499,
-    SAY_VIAL                        = -1603500,
-    SAY_LOW_HEALTH                  = -1603503,
-    SAY_SLAY                        = -1603504,
-    SAY_DEATH                       = -1603506,
-    SAY_NEFARIAN_ON_DEATH           = -1603507,
+    SAY_AGGRO                       = -1851000,
+    SAY_VIAL                        = -1851001,
+    SAY_LOW_HEALTH                  = -1851004,
+    SAY_SLAY                        = -1851005,
+    SAY_DEATH                       = -1851007,
+    SAY_NEFARIAN_ON_DEATH           = -1851040,
 };
 
 Position const MaloriakPositions[5] =
 {
     {-106.148842f, -473.517365f, 73.454552f, 4.699424f}, // Cauldron Position
     {-75.459419f, -430.066071f, 73.274872f, 3.609182f}, // Add summon Positions
-    { -77.055763f, -441.063354f, 73.489388f, 3.285442f},
+    {-77.055763f, -441.063354f, 73.489388f, 3.285442f},
     {-75.247200f, -499.593018f, 73.240547f, 2.064154f},
     {-143.885178f, -457.006409f, 73.369576f, 0.112437f},
 };
@@ -194,15 +194,16 @@ public:
             if(me->GetHealthPct() < 25 && phase != PHASE_FINAL)
             {   // Enter Final Phase
 
-                DoScriptText(SAY_LOW_HEALTH, me);
-
                 uint32 uiBerserker = events.GetNextEventTime(EVENT_BERSERK);
                 events.Reset();
                 events.ScheduleEvent(EVENT_BERSERK, uiBerserker);
 
                 phase = PHASE_FINAL;
                 me->InterruptNonMeleeSpells(true);
+                
                 DoCast(SPELL_RELEASE_ALL_ABBERATIONS);
+
+                DoScriptText(SAY_LOW_HEALTH, me);
             };
 
             while (uint32 eventId = events.ExecuteEvent())

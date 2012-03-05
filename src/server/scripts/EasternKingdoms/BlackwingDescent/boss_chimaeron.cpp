@@ -35,6 +35,7 @@ enum Events
     EVENT_DOUBLE_ATTACK = 1,
     EVENT_CAUSTIC_SLIME,
     EVENT_MASSACRE,
+    EVENT_FEUD,
     EVENT_SEC_MASSACRE,
     EVENT_BREAK,
 };
@@ -63,6 +64,20 @@ enum Spells
     SPELL_FINKLES_MIXTURE_VISUAL        = 91106,
     SPELL_SYSTEM_FALURE                 = 88853,
     SPELL_REROUTE_POWER                 = 88861,
+};
+
+enum ScriptTexts
+{
+    // Nefarian
+    SAY_AGGRO                       = -1851020,
+    SAY_FEUD                        = -1851021,
+    SAY_OUTRO                       = -1851022,
+
+    // Finkle
+    SAY_INTRO                       = -1851023,
+    SAY_SYSTEM_FAILURE              = -1851026,
+    SAY_FINAL_PHASE                 = -1851027,
+    SAY_DEATH                       = -1851028,
 };
 
 Position const BilePositions[6] =
@@ -105,7 +120,7 @@ public:
             me->RemoveAura(SPELL_DOUBLE_ATTACK);
             me->RemoveAura(SPELL_MORTALITY);
             me->RemoveAura(SPELL_MORTALITY_RAID_DEBUFF);
-            
+
             if(Creature* finkle_einhorn = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_FINKLE_EINHORN)))
                 finkle_einhorn->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
@@ -120,8 +135,11 @@ public:
 
         void EnterCombat(Unit* /*who*/)
         {
-           if(me->GetMap()->IsHeroic())
-               me->SummonCreature(NPC_NEFARIAN_HELPER_HEROIC,-115.5546f, 45.403f, 79.078f, 4.57f ,TEMPSUMMON_MANUAL_DESPAWN);
+            if(me->GetMap()->IsHeroic())
+                me->SummonCreature(NPC_NEFARIAN_HELPER_HEROIC,-115.5546f, 45.403f, 79.078f, 4.57f ,TEMPSUMMON_MANUAL_DESPAWN);
+
+            if(Creature* victor_nefarian = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_LORD_VICTOR_NEFARIAN)))
+                DoScriptText(SAY_AGGRO,victor_nefarian);
 
             events.ScheduleEvent(EVENT_MASSACRE, urand(30000,35000));
             events.ScheduleEvent(EVENT_DOUBLE_ATTACK, urand(13000,15000));
@@ -139,6 +157,9 @@ public:
             if(me->GetHealthPct() < 20 && phase == 1)
             {
                 phase = 2;
+
+                if(Creature* finkle_einhorn = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_FINKLE_EINHORN)))
+                    DoScriptText(SAY_FINAL_PHASE, finkle_einhorn);
 
                 DoCast(me, SPELL_MORTALITY);
                 DoCastAOE(SPELL_MORTALITY_RAID_DEBUFF);
@@ -158,17 +179,22 @@ public:
 
                 case EVENT_MASSACRE:
                     DoCastVictim(SPELL_MASSACRE);
-                    DoCast(me,SPELL_FEUD);
-
+                    me->AttackStop();
                     if(urand(0,2) == 0)
                         if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
                         {
                             bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_SYSTEM_FAILURE);
+
                             events.ScheduleEvent(EVENT_MASSACRE, 45000);
+                            events.ScheduleEvent(EVENT_DOUBLE_ATTACK, urand(2000, 3000));
                         }else
                             events.ScheduleEvent(EVENT_MASSACRE, 27000);
+                        break;
 
+                case EVENT_FEUD:
                     DoCast(me,SPELL_FEUD);
+                    if(Creature* victor_nefarian = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_LORD_VICTOR_NEFARIAN)))
+                        DoScriptText(SAY_FEUD, victor_nefarian);
                     break;
 
                 case EVENT_DOUBLE_ATTACK:
@@ -191,7 +217,8 @@ public:
                 }
             }		
 
-            DoMeleeAttackIfReady();
+            if(!me->HasAura(SPELL_FEUD))
+                DoMeleeAttackIfReady();
         }
 
         void DamageTaken(Unit* who, uint32& damage)
@@ -205,11 +232,13 @@ public:
 
         void JustDied(Unit* /*killer*/)
         {
+            me->RemoveAllAuras();
+
             if(Creature* bile_o_tron = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_BILE_O_TRON)))
-            {
-                bile_o_tron->RemoveAllAuras();
-                bile_o_tron->GetMotionMaster()->MoveIdle();
-            }
+                bile_o_tron->AI()->DoAction(ACTION_BILE_O_TRON_RESET);
+
+            if(Creature* victor_nefarian = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_LORD_VICTOR_NEFARIAN)))
+                DoScriptText(SAY_OUTRO, victor_nefarian);
 
             if(Creature* nefarianHelperheroic = me->FindNearestCreature(NPC_NEFARIAN_HELPER_HEROIC,50.0f,true))
                 nefarianHelperheroic->ForcedDespawn();
@@ -249,6 +278,40 @@ public:
         }
         return true;
     }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new mob_finkle_einhornAI(creature);
+    }
+
+    struct mob_finkle_einhornAI : public ScriptedAI
+    {
+        mob_finkle_einhornAI(Creature* creature) : ScriptedAI(creature)
+        {
+            timer = 1000;
+        }
+
+        uint32 timer;
+
+        void UpdateAI(uint32 const diff) 
+        {
+            if (timer <= diff)
+            {
+                if (Player* target = me->FindNearestPlayer(85.f, true))
+                    if (target->GetDistance(me) < 85.f  && me->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
+                    {
+                        DoScriptText(SAY_INTRO - urand(0,2), me);
+
+                        timer = 25000;
+
+                    } else
+                        timer = 1000;
+                else
+                    timer = 1000;
+
+            } else timer -= diff;
+        }
+    };
 };
 
 class mob_bile_o_tron : public CreatureScript
@@ -317,7 +380,7 @@ public:
                     break;
 
                 if(Creature* finkle_einhorn = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_FINKLE_EINHORN)))
-                    finkle_einhorn->MonsterYell("Poor little fella.",0,0);
+                    DoScriptText(SAY_SYSTEM_FAILURE, finkle_einhorn);
 
                 me->RemoveAllAuras();
                 DoCast(me,SPELL_REROUTE_POWER, true);
