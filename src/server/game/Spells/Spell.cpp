@@ -3915,9 +3915,9 @@ void Spell::finish(bool ok) {
 
     // TODO: Kill these hacks
     switch (m_spellInfo->Id) {
-        case 49143: // Frost Strike
-        case 47541: // Death Coil
-        case 56815: // Rune Strike
+        case 49143:     // Frost Strike
+        case 47541:     // Death Coil
+        case 56815:     // Rune Strike
             if (m_caster->HasAura(81229)) // Runic Empowerment
                     {
                 if (roll_chance_i(45)) {
@@ -3937,12 +3937,12 @@ void Spell::finish(bool ok) {
                 }
             }
             break;
-        case 30455: // Ice Lance
-        case 44572: // Deep Freeze
+        case 30455:     // Ice Lance
+        case 44572:     // Deep Freeze
             if (m_caster->HasAura(44544)) // Fingers of Frost
             m_caster->RemoveAuraFromStack(44544);
             break;
-        case 2061: // Flash heal
+        case 2061:      // Flash heal
             if (m_caster->HasAura(88688)) // Surge of Light
             m_caster->RemoveAura(88688);
             break;
@@ -3967,9 +3967,9 @@ void Spell::SendCastResult(Player* caster, SpellEntry const* spellInfo,
     if (result == SPELL_CAST_OK) return;
 
     WorldPacket data(SMSG_CAST_FAILED, (4 + 1 + 1));
-    data << uint8(cast_count); // single cast or multi 2.3 (0/1)
+    data << uint8(cast_count);  // single cast or multi 2.3 (0/1)
     data << uint32(spellInfo->Id);
-    data << uint8(result); // problem
+    data << uint8(result);      // problem
     switch (result) {
         case SPELL_FAILED_REQUIRES_SPELL_FOCUS:
             data << uint32(spellInfo->RequiresSpellFocus);
@@ -3980,18 +3980,18 @@ void Spell::SendCastResult(Player* caster, SpellEntry const* spellInfo,
         case SPELL_FAILED_REQUIRES_AREA:
             // hardcode areas limitation case
             switch (spellInfo->Id) {
-                case 41617: // Cenarion Mana Salve
-                case 41619: // Cenarion Healing Salve
+                case 41617:     // Cenarion Mana Salve
+                case 41619:     // Cenarion Healing Salve
                     data << uint32(3905);
                     break;
-                case 41618: // Bottled Nethergon Energy
-                case 41620: // Bottled Nethergon Vapor
+                case 41618:     // Bottled Nethergon Energy
+                case 41620:     // Bottled Nethergon Vapor
                     data << uint32(3842);
                     break;
-                case 45373: // Bloodberry Elixir
+                case 45373:     // Bloodberry Elixir
                     data << uint32(4075);
                     break;
-                default: // default case (don't must be)
+                default:        // default case (don't must be)
                     data << uint32(0);
                     break;
             }
@@ -4050,10 +4050,10 @@ void Spell::SendSpellStart() {
         data.append(m_caster->GetPackGUID());
 
     data.append(m_caster->GetPackGUID());
-    data << uint8(m_cast_count); // pending spell cast?
-    data << uint32(m_spellInfo->Id); // spellId
-    data << uint32(castFlags); // cast flags
-    data << int32(m_timer); // delay?
+    data << uint8(m_cast_count);        // pending spell cast?
+    data << uint32(m_spellInfo->Id);    // spellId
+    data << uint32(castFlags);          // cast flags
+    data << int32(m_timer);             // delay?
 
     m_targets.write(data);
 
@@ -4083,38 +4083,38 @@ void Spell::SendSpellGo() {
             || m_triggeredByAuraSpell) castFlags |= CAST_FLAG_PENDING;
 
     if (m_spellInfo->Attributes & SPELL_ATTR0_REQ_AMMO) castFlags |=
-            CAST_FLAG_AMMO; // arrows/bullets visual
+            CAST_FLAG_AMMO;                 // arrows/bullets visual
     if ((m_caster->GetTypeId() == TYPEID_PLAYER
             || (m_caster->GetTypeId() == TYPEID_UNIT
                     && m_caster->ToCreature()->isPet()))
             && m_spellInfo->powerType != POWER_HEALTH) castFlags |=
-            CAST_FLAG_POWER_LEFT_SELF; // should only be sent to self, but the current messaging doesn't make that possible
+            CAST_FLAG_POWER_LEFT_SELF;      // should only be sent to self, but the current messaging doesn't make that possible
 
     if ((m_caster->GetTypeId() == TYPEID_PLAYER)
             && (m_caster->getClass() == CLASS_DEATH_KNIGHT)
             && m_spellInfo->runeCostID
             && m_spellInfo->powerType == POWER_RUNE) {
-        castFlags |= CAST_FLAG_UNKNOWN_19; // same as in SMSG_SPELL_START
-        castFlags |= CAST_FLAG_RUNE_LIST; // rune cooldowns list
-        castFlags |= CAST_FLAG_UNKNOWN_9; // ??
+        castFlags |= CAST_FLAG_UNKNOWN_19;  // same as in SMSG_SPELL_START
+        castFlags |= CAST_FLAG_RUNE_LIST;   // rune cooldowns list
+        castFlags |= CAST_FLAG_UNKNOWN_9;   // ??
     }
 
     if (IsSpellHaveEffect(m_spellInfo, SPELL_EFFECT_ACTIVATE_RUNE)) {
-        castFlags |= CAST_FLAG_RUNE_LIST; // rune cooldowns list
-        castFlags |= CAST_FLAG_UNKNOWN_19; // same as in SMSG_SPELL_START
+        castFlags |= CAST_FLAG_RUNE_LIST;   // rune cooldowns list
+        castFlags |= CAST_FLAG_UNKNOWN_19;  // same as in SMSG_SPELL_START
     }
 
-    WorldPacket data(SMSG_SPELL_GO, 50); // guess size
+    WorldPacket data(SMSG_SPELL_GO, 50);    // guess size
 
     if (m_CastItem) data.append(m_CastItem->GetPackGUID());
     else
         data.append(m_caster->GetPackGUID());
 
     data.append(m_caster->GetPackGUID());
-    data << uint8(m_cast_count); // pending spell cast?
-    data << uint32(m_spellInfo->Id); // spellId
-    data << uint32(castFlags); // cast flags
-    data << uint32(getMSTime()); // timestamp
+    data << uint8(m_cast_count);        // pending spell cast?
+    data << uint32(m_spellInfo->Id);    // spellId
+    data << uint32(castFlags);          // cast flags
+    data << uint32(getMSTime());        // timestamp
 
     /*
      // statement below seems to be wrong - i've seen spells with both unit and dest target

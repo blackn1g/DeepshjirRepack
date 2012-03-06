@@ -21381,9 +21381,9 @@ bool Player::ReduceSpellCooldown(uint32 spell_id, uint32 seconds)
 
             this->AddSpellCooldown(spell_id, 0, uint32(time(NULL) + newCooldownDelay));
             WorldPacket data(SMSG_MODIFY_COOLDOWN, 4 + 8 + 4);
-            data << uint32(spell_id); // Spell ID
-            data << uint64(GetGUID()); // Player GUID
-            data << int32(-seconds); // Cooldown mod in milliseconds
+            data << uint32(spell_id);   // Spell ID
+            data << uint64(GetGUID());  // Player GUID
+            data << int32(-seconds);    // Cooldown mod in milliseconds
             sLog->outBasic("Seconds: %i", int32(-seconds));
             GetSession()->SendPacket(&data);
             return true;

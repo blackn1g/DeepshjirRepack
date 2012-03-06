@@ -50,7 +50,7 @@ enum GameObjectIds
 {
     GO_ORIGINATION_ELEVATOR,
     GO_LARGE_STONE_OBELISK      = 207410,
-    GO_ANHUUR_BRIDGE            = 206506
+//    GO_ANHUUR_BRIDGE            = 206506      already in boss script
 };
 
 enum CreatureIds
