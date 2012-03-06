@@ -513,6 +513,17 @@ struct Position {
             pos->Relocate(m_positionX, m_positionY, m_positionZ, m_orientation);
     }
 
+    Position GetPosition()
+    {
+        Position _position;
+        _position.m_positionX = m_positionX;
+        _position.m_positionY = m_positionY;
+        _position.m_positionZ = m_positionZ;
+        _position.m_orientation = m_orientation;
+
+        return _position;
+    }
+
     Position::PositionXYZStreamer PositionXYZStream() {
         return Position::PositionXYZStreamer(*this);
     }
