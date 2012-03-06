@@ -36,7 +36,7 @@
 #                     Logs directory must exists, or log file creation will be disabled.
 #        Default:     "" - (Log files will be stored in the current path)
 
-LogsDir = ""
+LogsDir = "Logs"
 
 #
 #    MaxPingTime
@@ -100,7 +100,7 @@ LogFile = "Auth.log"
 #
 #             Default: 0 (nothing)
 
-DebugLogMask = 64
+DebugLogMask = 0
 
 #
 #    SQLDriverLogFile
@@ -201,7 +201,7 @@ RealmsStateUpdateDelay = 20
 #        Default:     0  - (Disabled)
 #                     1+ - (Enabled)
 
-WrongPass.MaxCount = 0
+WrongPass.MaxCount = 4
 
 #
 #    WrongPass.BanTime
@@ -209,7 +209,7 @@ WrongPass.MaxCount = 0
 #        Default:     600 - (10 minutes)
 #                     0   - (Permanent ban)
 
-WrongPass.BanTime = 600
+WrongPass.BanTime = 900
 
 #
 #    WrongPass.BanType
@@ -217,7 +217,7 @@ WrongPass.BanTime = 600
 #        Default:     0 - (Ban IP)
 #                     1 - (Ban Account)
 
-WrongPass.BanType = 0
+WrongPass.BanType = 1
 
 #
 ###################################################################################################
@@ -235,7 +235,7 @@ WrongPass.BanType = 0
 #                                                                           Unix/Linux)
 #        Default:     "127.0.0.1;3306;arkcore;arkania;auth"
 
-LoginDatabaseInfo = "127.0.0.1;3306;arkcore;arkania;auth"
+LoginDatabaseInfo = "127.0.0.1;3306;server;server;deepshjir_auth"
 
 #
 #    LoginDatabase.WorkerThreads

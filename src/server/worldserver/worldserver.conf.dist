@@ -61,7 +61,7 @@ RealmID = 1
 #        Example:     "@prefix@/share/arkcore"
 #        Default:     "."
 
-DataDir = "."
+DataDir = "Data"
 
 #
 #    LogsDir
@@ -70,7 +70,7 @@ DataDir = "."
 #                     Logs directory must exists, or log file creation will be disabled.
 #        Default:     "" - (Log files will be stored in the current path)
 
-LogsDir = "logs"
+LogsDir = "Logs"
 
 #
 #    LoginDatabaseInfo
@@ -87,9 +87,9 @@ LogsDir = "logs"
 #                     "127.0.0.1;3306;username;password;world"      - (WorldDatabaseInfo)
 #                     "127.0.0.1;3306;username;password;characters" - (CharacterDatabaseInfo)
 
-LoginDatabaseInfo     = "127.0.0.1;3306;arkania;arkania;auth"
-WorldDatabaseInfo     = "127.0.0.1;3306;arkania;arkania;world"
-CharacterDatabaseInfo = "127.0.0.1;3306;arkania;arkania;characters"
+LoginDatabaseInfo     = "127.0.0.1;3306;server;server;deepshjir_auth"
+WorldDatabaseInfo     = "127.0.0.1;3306;server;server;deepshjir_world"
+CharacterDatabaseInfo = "127.0.0.1;3306;server;server;deepshjir_char"
 
 #
 #    LoginDatabase.WorkerThreads
@@ -103,7 +103,7 @@ CharacterDatabaseInfo = "127.0.0.1;3306;arkania;arkania;characters"
 #                     1 - (CharacterDatabase.WorkerThreads)
 
 LoginDatabase.WorkerThreads     = 1
-WorldDatabase.WorkerThreads     = 1
+WorldDatabase.WorkerThreads     = 2
 CharacterDatabase.WorkerThreads = 1
 
 #
@@ -3185,12 +3185,12 @@ Anticheat.Movement.GmLevel = 0
 ###################################################################################################
 
 AuctionHouseBot.DEBUG = 0
-AuctionHouseBot.EnableSeller = 0
-AuctionHouseBot.EnableBuyer = 0
+AuctionHouseBot.EnableSeller = 1
+AuctionHouseBot.EnableBuyer = 1
 AuctionHouseBot.UseBuyPriceForSeller = 0
 AuctionHouseBot.UseBuyPriceForBuyer = 0
-AuctionHouseBot.Account = 0
-AuctionHouseBot.GUID = 0
+AuctionHouseBot.Account = 1
+AuctionHouseBot.GUID = 1
 AuctionHouseBot.ItemsPerCycle = 200
 
 AuctionHouseBot.VendorItems = 0

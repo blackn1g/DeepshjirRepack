@@ -1,5 +1,5 @@
 /*
-* Characters full: 1.03.2012 - with Anticheat
+* Characters full: 4.03.2012 - with Anticheat and AHBot
 */
 
 -- MySQL dump 10.13  Distrib 5.5.15, for Win64 (x86)
