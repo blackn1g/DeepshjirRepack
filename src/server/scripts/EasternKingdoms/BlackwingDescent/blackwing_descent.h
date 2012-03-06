@@ -87,6 +87,8 @@ enum Creatures
     NPC_PRE_NEFARIAN                = 49799,
     NPC_PRE_ATRAMEDES               = 43407,
 
+    NPC_SONAR_PULSE                 = 49623,
+
     // Nefarian
     NPC_ONYXIA                      = 41270,
 

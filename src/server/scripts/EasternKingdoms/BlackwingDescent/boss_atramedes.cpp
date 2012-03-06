@@ -25,13 +25,42 @@
 #include "ScriptPCH.h"
 #include "blackwing_descent.h"
 
+enum Events
+{
+    // Groundphase
+    EVENT_SONAR_PULSE = 1,
+    EVENT_MODULATION,
+    EVENT_SONIC_BREATH,
+    EVENT_SEARING_FLAMES,
+};
+
 enum Spells
 {
     // Pre Event
     SPELL_GLOW_ORANGE_GENERETIC     = 80857,
 
     // Bossfight
+    // Groundphase   
+
 };
+
+/*
+
+- Sonar Pulse
+77672, 92411, 92412, 92413 dbm warining and sound & emote (maintrigger?)
+77673 nothing
+77674, 92414, 92415, 92416 visual effect
+77675 nothing
+92417 nothing
+92418 nothing
+92419 nothing
+92519 nothing
+92526 nothing
+92530 summons for 3 seconds
+92531 "
+92532 "
+92533 "
+*/
 
 enum ScriptTexts
 {
@@ -61,15 +90,33 @@ public:
         void Reset()
         {
             isOnGround = true;
+            DespawnMinions();
 
             _Reset();
         }
 
         void EnterCombat(Unit* /*who*/)
         {
-            //events.ScheduleEvent(EVENT_TEST, urand(10000,12000));
+            initEvents();
 
             _EnterCombat();
+        }
+
+        void initEvents(bool onGround = true)
+        {
+            events.Reset();
+
+            if(onGround)
+            {
+                events.ScheduleEvent(EVENT_SONAR_PULSE, 20000);
+                //events.ScheduleEvent(EVENT_MODULATION, 20000);
+                //events.ScheduleEvent(EVENT_SONAR_PULSE, 20000);
+                //events.ScheduleEvent(EVENT_SONAR_PULSE, 20000);
+
+            }else
+            {
+
+            }
         }
 
         void UpdateAI(const uint32 diff)
@@ -82,21 +129,41 @@ public:
 
             while (uint32 eventId = events.ExecuteEvent())
             {
-                /*switch (eventId)
+                switch (eventId)
                 {
 
-                case EVENT_TEST:
-                DoCastVictim(SPELL_ENFEEBLING_BLOW);
-                events.ScheduleEvent(EVENT_ENFEEBLING_BLOW, urand(19000,24000));
-                break;
+                    // Ground Phase
+                case EVENT_SONAR_PULSE:
+                    for(uint8 i=0; i<=7; i++)
+                        me->SummonCreature(NPC_SONAR_PULSE,me->GetPosition(),TEMPSUMMON_TIMED_DESPAWN,30000);
+
+                    events.ScheduleEvent(EVENT_SONAR_PULSE, 50000);
+                    break;
+                case EVENT_MODULATION:
+
+                    events.ScheduleEvent(EVENT_MODULATION, 20000);
+                    break;
+                case EVENT_SONIC_BREATH:
+
+                    events.ScheduleEvent(EVENT_SONIC_BREATH, 20000);
+                    break;
+                case EVENT_SEARING_FLAMES:
+
+                    events.ScheduleEvent(EVENT_SONAR_PULSE, 20000);
+                    break;
 
                 default:
-                break;
-                }*/
+                    break;
+                }
             }		
 
             if(isOnGround)
                 DoMeleeAttackIfReady();
+        }
+
+        void JustSummoned(Creature* summon)
+        {
+            summon->AI()->SetMinionInCombat();
         }
 
         void JustDied(Unit* /*killer*/)
@@ -107,49 +174,59 @@ public:
             _JustDied();
         }
 
-        void initEvents(bool onGround = true)
-        {
-            events.Reset();
-
-            if(onGround)
-            {
-
-            }else
-            {
-
-            }
-        }
-
     private:
         inline void DespawnMinions()
         {
+            me->DespawnCreaturesInArea(NPC_SONAR_PULSE);
+        }
+    };
+};
 
+class mob_sonar_pulse : public CreatureScript
+{
+public:
+    mob_sonar_pulse() : CreatureScript("mob_sonar_pulse") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new mob_sonar_pulseAI (creature);
+    }
+
+    struct mob_sonar_pulseAI : public ScriptedAI
+    {
+        mob_sonar_pulseAI(Creature* creature) : ScriptedAI(creature)
+        {
+            timerChangeTarget = 1000;
+            creature->SetReactState(REACT_PASSIVE);
         }
 
-        void DespawnCreatures(uint32 entry)
+        uint32 timerChangeTarget;
+
+        void UpdateAI(const uint32 diff)
         {
-            std::list<Creature*> creatures;
-            GetCreatureListWithEntryInGrid(creatures, me, entry, 100.0f);
+            if (timerChangeTarget <= diff)
+            {
+                if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
+                    me->GetMotionMaster()->MoveFollow(target, 0, 0);
 
-            if (creatures.empty())
-                return;
+                timerChangeTarget = 10000;
 
-            for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
-                (*iter)->DespawnOrUnsummon();
+            } else timerChangeTarget -= diff;
         }
     };
 };
 
 uint16 const times[16] =
 {
-    0, 9000, 8000, 5000, 6000, 7500, 5000, 7500,
-    5000, 6000, 4000, 5000, 6000, 5500, 6000, 4000
+    0, 10000, 10000, 5000, 6000, 7500, 5000, 7500,
+    5000, 6000, 4000, 5000, 7000, 700, 6000, 4000
 };
 
 uint16 const adds[8] =
 {
     43119, 43128, 43130, 43122, 43127, 43125, 43129, 43126
 };
+
 
 class mob_maloriak_atramedes_event : public CreatureScript
 {
@@ -282,5 +359,6 @@ public:
 void AddSC_boss_atramedes()
 {
     new boss_atramedes();
+    new mob_sonar_pulse();
     new mob_maloriak_atramedes_event();
 }

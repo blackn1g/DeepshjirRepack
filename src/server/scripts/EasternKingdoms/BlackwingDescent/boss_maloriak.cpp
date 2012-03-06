@@ -386,8 +386,7 @@ public:
 
         void JustSummoned(Creature* summon)
         {
-            summon->AI()->DoZoneInCombat(summon);
-            summon->SetInCombatWithZone();
+            summon->AI()->SetMinionInCombat();
         }
 
         void MovementInform(uint32 type, uint32 id)
@@ -492,24 +491,12 @@ public:
 
         inline void DespawnMinions()
         {
-            DespawnCreatures(NPC_ABBERATON);
-            DespawnCreatures(NPC_PRIME_SUBJECT);
-            DespawnCreatures(NPC_FLASH_FREEZE);
-            DespawnCreatures(NPC_VILE_SWILL);
-            DespawnCreatures(NPC_MAGMA_JET_CONTROLLER);
-            DespawnCreatures(NPC_ABSOLUTE_ZERO);  
-        }
-
-        void DespawnCreatures(uint32 entry)
-        {
-            std::list<Creature*> creatures;
-            GetCreatureListWithEntryInGrid(creatures, me, entry, 100.0f);
-
-            if (creatures.empty())
-                return;
-
-            for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
-                (*iter)->DespawnOrUnsummon();
+            me->DespawnCreaturesInArea(NPC_ABBERATON);
+            me->DespawnCreaturesInArea(NPC_PRIME_SUBJECT);
+            me->DespawnCreaturesInArea(NPC_FLASH_FREEZE);
+            me->DespawnCreaturesInArea(NPC_VILE_SWILL);
+            me->DespawnCreaturesInArea(NPC_MAGMA_JET_CONTROLLER);
+            me->DespawnCreaturesInArea(NPC_ABSOLUTE_ZERO);  
         }
 
         inline void DoCastCausticSlime()
@@ -557,10 +544,12 @@ public:
         mob_flash_freeze_maloriakAI(Creature* creature) : ScriptedAI(creature) { }
 
         Unit* target;
+        uint32 timerChecktarget;
 
         void IsSummonedBy(Unit* summoner)
         {
-            target = summoner;           
+            target = summoner;
+            timerChecktarget = 500;
 
             if(target)
             {
@@ -569,6 +558,19 @@ public:
             }
 
             me->AddAura(SPELL_FLASH_FREEZE_VISUAL, me);
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (timerChecktarget <= diff)
+            {
+                // Check weather the Debuff on Target is Expired
+                if(target && !target->HasAura(SPELL_FLASH_FREEZE))
+                    me->ForcedDespawn();
+
+                timerChecktarget = 500;
+
+            } else timerChecktarget -= diff;
         }
 
         void JustDied(Unit* /*killer*/)
