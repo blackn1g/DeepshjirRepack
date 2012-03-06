@@ -708,6 +708,18 @@ public:
     void ForcedDespawn(uint32 timeMSToDespawn = 0);
     void DespawnOrUnsummon(uint32 msTimeToDespawn = 0);
 
+    void DespawnCreaturesInArea(uint32 entry)
+    {
+        std::list<Creature*> creatures;
+        GetCreatureListWithEntryInGrid(creatures, entry, 100.0f);
+
+        if (creatures.empty())
+          return;
+
+         for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
+          (*iter)->DespawnOrUnsummon();
+     }
+
     time_t const& GetRespawnTime() const {
         return m_respawnTime;
     }
