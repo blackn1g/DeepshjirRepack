@@ -187,6 +187,11 @@ public:
             DoMeleeAttackIfReady();
         }
 
+        void JustSummoned(Creature* summon)
+        {
+            summon->AI()->SetMinionInCombat();
+        }
+
         void JustDied(Unit* killer)
         {
             DespawnMinions();
