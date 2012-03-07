@@ -985,7 +985,8 @@ void AuctionHouseBot::Initialize()
             if (debug_Out) sLog->outString("AuctionHouseBot: \"%s\" failed", lootQuery);
         }
 
-        ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+       ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+       if (debug_Out) sLog->outError("AuctionHouseBot: Item Template Store has a size of: %u", its->size());
        for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
        {
 
