@@ -29,7 +29,7 @@ enum NPC_DeffiantTroll
     DEFFIANT_KILL_CREDIT               = 34830,
     SPELL_LIGHTNING_VISUAL             = 45870,
     QUEST_GOOD_HELP_IS_HARD_TO_FIND    = 14069,
-    GO_DEPOSIT                         = 195489,
+    GO_DEPOSIT                         = 202593,
 };
 
 #define SAY_WORK_1 "Oops, break's over."
@@ -104,8 +104,8 @@ class npc_defiant_troll : public CreatureScript
                         break;
                 }
                 me->RemoveAllAuras();
-                if (GameObject* Deposit = me->FindNearestGameObject(GO_DEPOSIT, 20))
-                    me->GetMotionMaster()->MovePoint(1, Deposit->GetPositionX()-1, Deposit->GetPositionY(), Deposit->GetPositionZ());
+                if (GameObject* Deposit = me->FindNearestGameObject(GO_DEPOSIT, 20.f))
+                    me->GetMotionMaster()->MovePoint(1, Deposit->GetPositionX()-2, Deposit->GetPositionY()-2, Deposit->GetPositionZ());
             }
         }
 
@@ -144,9 +144,10 @@ class npc_defiant_troll : public CreatureScript
     {
         if (player->GetQuestStatus(QUEST_GOOD_HELP_IS_HARD_TO_FIND) == QUEST_STATUS_INCOMPLETE)
         {
-            player->CastSpell(creature, SPELL_LIGHTNING_VISUAL, true);
+            creature->CastSpell(creature, SPELL_LIGHTNING_VISUAL, true);
             SpellEntry const* spell = sSpellStore.LookupEntry(SPELL_LIGHTNING_VISUAL);
             CAST_AI(npc_defiant_troll::npc_defiant_trollAI, creature->AI())->SpellHit(player, spell);
+            creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             return true;
         }
         return false;
@@ -182,8 +183,58 @@ public:
     }
 };
 
+// Liberate the Kaja' Mine
+class spell_kabummbomb : public SpellScriptLoader
+{
+public:
+    spell_kabummbomb() : SpellScriptLoader("spell_kabummbomb") { }
+
+    class spell_kabummbombSpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_kabummbombSpellScript);
+
+        bool Validate(SpellEntry const * spellEntry)
+        {
+            return true;
+        }
+
+        bool Load()
+        {
+            return true;
+        }
+
+        void HandleActivateGameobject(SpellEffIndex effIndex)
+        {
+            if(Unit* caster = GetCaster())
+            {
+                caster->MonsterSay("test",0,0);
+            }
+            if(Unit* caster = GetCastItem()->GetOwner())
+            {
+                caster->MonsterSay("test",0,0);
+            }
+            if(GameObject* gob = GetTargetGObj())
+            {
+                gob->Delete();
+                
+            }
+        }
+
+        void Register()
+        {
+            OnEffect += SpellEffectFn(spell_kabummbombSpellScript::HandleActivateGameobject,EFFECT_0,SPELL_EFFECT_ACTIVATE_OBJECT);
+        }
+    };
+
+    SpellScript *GetSpellScript() const
+    {
+        return new spell_kabummbombSpellScript();
+    }
+};
+
 void AddSC_kezan()
 {
     new npc_fourth_and_goal_target;
     new npc_defiant_troll;
+    new spell_kabummbomb();
 }
