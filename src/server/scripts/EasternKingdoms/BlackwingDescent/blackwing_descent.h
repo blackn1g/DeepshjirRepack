@@ -86,6 +86,7 @@ enum Creatures
     NPC_PRE_MALORIAK                = 43404,
     NPC_PRE_NEFARIAN                = 49799,
     NPC_PRE_ATRAMEDES               = 43407,
+    NPC_PRE_LIGHT_EFFECT            = 41525,
 
     NPC_SONAR_PULSE                 = 49623,
 
@@ -103,6 +104,7 @@ enum Gameobjects
     GOB_DOOR_ATRAMEDES              = 402368,
     GOB_ONYXIA_PLATFORM             = 207834,
     GOB_MALORIAKS_CAULDRON          = 203306,
+    GOB_NEFARIANS_THRONE            = 202832,
 };
 
 #endif

@@ -108,7 +108,7 @@ public:
 
             if(onGround)
             {
-                events.ScheduleEvent(EVENT_SONAR_PULSE, 20000);
+                events.ScheduleEvent(EVENT_SONAR_PULSE, 5000);
                 //events.ScheduleEvent(EVENT_MODULATION, 20000);
                 //events.ScheduleEvent(EVENT_SONAR_PULSE, 20000);
                 //events.ScheduleEvent(EVENT_SONAR_PULSE, 20000);
@@ -164,6 +164,10 @@ public:
         void JustSummoned(Creature* summon)
         {
             summon->AI()->SetMinionInCombat();
+
+            if(summon->GetEntry() == NPC_SONAR_PULSE)
+                if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
+                    summon->GetMotionMaster()->MoveChase(target, 0, 0);
         }
 
         void JustDied(Unit* /*killer*/)
@@ -196,7 +200,7 @@ public:
     {
         mob_sonar_pulseAI(Creature* creature) : ScriptedAI(creature)
         {
-            timerChangeTarget = 1000;
+            timerChangeTarget = 13000;
             creature->SetReactState(REACT_PASSIVE);
         }
 
@@ -207,9 +211,9 @@ public:
             if (timerChangeTarget <= diff)
             {
                 if(Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 200, true))
-                    me->GetMotionMaster()->MoveFollow(target, 0, 0);
+                    me->GetMotionMaster()->MoveFollow(target, 3, 2);
 
-                timerChangeTarget = 10000;
+                timerChangeTarget = 13000;
 
             } else timerChangeTarget -= diff;
         }
@@ -240,6 +244,8 @@ public:
             instance = creature->GetInstanceScript();
 
             maloriak = creature;
+
+            
         }
 
         InstanceScript* instance;
@@ -250,11 +256,16 @@ public:
         Creature* atramedes;
         Creature* maloriak;
 
+        bool eventProcessed;
+
         void Reset()
         {
             timer = 1000;
             eventStep = 0;
-            me->SetVisible(false);
+
+            me->DespawnCreaturesInArea(NPC_PRE_LIGHT_EFFECT);
+            me->SummonCreature(NPC_PRE_LIGHT_EFFECT, 126.22007f, -231.013306f, 75.453453f, 3.117948f);
+            me->SummonCreature(NPC_PRE_LIGHT_EFFECT, 125.573227f, -221.80191f, 75.453453f, 2.945161f);
         };
 
         void UpdateAI(uint32 const diff) 
@@ -265,23 +276,15 @@ public:
                 {
                     timer = times[eventStep];
 
-                    // Check weather all Adds are death
-                    for(uint8 i=0; i<=7; i++)
-                        if(me->FindNearestCreature(adds[i], 100.f,true))
-                            return;
-
-                    if(atramedes = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_PRE_ATRAMEDES)))
-                    {   
-                        atramedes->SetPhaseMask(1, true);
-                        eventStep = 1;
-                        me->SetVisible(true);
-                        nefarian = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_PRE_NEFARIAN));
-                        nefarian->SetPhaseMask(1, true);
-
-                        // If something went wrong...
-                        if(Creature* atramedesnew = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_ATRAMEDES)))
-                            atramedesnew->SetPhaseMask(2, true);
-                    }
+                    if (Player* target = me->FindNearestPlayer(40.f, true))
+                        if (target->GetDistance(me) < 35.f)
+                        {
+                            if(atramedes = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_PRE_ATRAMEDES)))
+                            {
+                                eventStep = 1;
+                                nefarian = ObjectAccessor::GetCreature(*me,instance->GetData64(NPC_PRE_NEFARIAN));
+                            }
+                        }
                 }else
                 {
 
@@ -311,7 +314,7 @@ public:
                         Say(maloriak);
                         break;
                     case 5:
-                        atramedes->GetMotionMaster()->MovePoint(0, 188.951569f, -224.604065f, 75.4534f);
+                        atramedes->GetMotionMaster()->MovePoint(0,125.996674f, -227.132782f, 75.453979f);
                         Say(maloriak);
                         break;
                     case 7:
@@ -319,19 +322,20 @@ public:
                         Say(maloriak);
                         break;
                     case 8:
-                        atramedes->ForcedDespawn();
-
-                        if(Creature* atramedesnew = ObjectAccessor::GetCreature(*me,instance->GetData64(BOSS_ATRAMEDES)))
-                            atramedesnew->SetPhaseMask(1, true);
-
                         atramedes->RemoveAura(SPELL_GLOW_ORANGE_GENERETIC);
                         Say(maloriak);
                         break;
 
                         // Both
                     case 16:
-                        nefarian->ForcedDespawn();
-                        maloriak->ForcedDespawn();
+                        atramedes->DespawnOrUnsummon();
+                        nefarian->DespawnOrUnsummon();
+                        me->DespawnCreaturesInArea(NPC_PRE_LIGHT_EFFECT);
+
+                        if(GameObject* throne = me->FindNearestGameObject(GOB_NEFARIANS_THRONE,20))
+                            throne->Delete();
+
+                        maloriak->DespawnOrUnsummon();
                         break;
                     }
 
